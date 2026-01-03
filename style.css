@@ -1,43 +1,44 @@
 body {
   margin: 0;
   font-family: Arial, sans-serif;
-  background: #f5f6fa;
+  scroll-behavior: smooth;
 }
 
 header {
-  background: #1e272e;
+  background: linear-gradient(135deg, #0f2027, #203a43);
   color: white;
-  padding: 20px;
   text-align: center;
+  padding: 30px;
 }
 
 nav {
-  background: #2f3640;
+  background: #111;
   padding: 10px;
   text-align: center;
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
-nav button {
-  background: #353b48;
+nav a {
   color: white;
-  border: none;
-  padding: 10px 15px;
-  margin: 5px;
-  cursor: pointer;
+  margin: 10px;
+  text-decoration: none;
+  font-weight: bold;
 }
 
-nav button:hover {
-  background: #40739e;
+.section {
+  padding: 40px;
 }
 
-.tab {
-  display: none;
-  padding: 20px;
-}
+.light { background: #f4f6f8; }
+.dark { background: #1e272e; color: white; }
+.warning { background: #fff3cd; }
+.control { background: #e8f0fe; }
 
 .card-grid, .info-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 15px;
 }
 
@@ -45,16 +46,34 @@ nav button:hover {
   background: white;
   padding: 15px;
   border-radius: 6px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  text-align: center;
 }
 
 .highlight {
-  background: #dff9fb;
+  background: #c8e6c9;
   font-weight: bold;
 }
 
-canvas {
+.info-box.blue { background: #bbdefb; }
+.info-box.green { background: #c8e6c9; }
+.info-box.orange { background: #ffe0b2; }
+.info-box.purple { background: #e1bee7; }
+
+.control-btn {
+  padding: 12px 20px;
+  margin: 10px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.image {
+  max-width: 100%;
   margin: 20px 0;
+  border-radius: 6px;
+}
+
+canvas {
   background: white;
+  margin: 20px 0;
   padding: 10px;
 }
