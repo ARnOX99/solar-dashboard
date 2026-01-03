@@ -1,61 +1,60 @@
 body {
-  font-family: Arial, sans-serif;
-  background: #f4f6f8;
   margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f5f6fa;
+}
+
+header {
+  background: #1e272e;
+  color: white;
+  padding: 20px;
+  text-align: center;
+}
+
+nav {
+  background: #2f3640;
+  padding: 10px;
+  text-align: center;
+}
+
+nav button {
+  background: #353b48;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  margin: 5px;
+  cursor: pointer;
+}
+
+nav button:hover {
+  background: #40739e;
+}
+
+.tab {
+  display: none;
   padding: 20px;
 }
 
-h1 {
-  text-align: center;
-}
-
-.tabs {
-  text-align: center;
-  margin-bottom: 20px;
-}
-
-.tab-btn {
-  padding: 10px 20px;
-  border: none;
-  background: #ccc;
-  cursor: pointer;
-  margin: 5px;
-}
-
-.tab-btn.active {
-  background: #007bff;
-  color: white;
-}
-
-.tab-content {
-  display: none;
-}
-
-.tab-content.active {
-  display: block;
-}
-
-.grid {
+.card-grid, .info-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 15px;
 }
 
-.card {
+.card, .info-box {
   background: white;
   padding: 15px;
-  border-radius: 8px;
-  font-size: 16px;
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
 }
 
 .highlight {
-  background: #ffeaa7;
+  background: #dff9fb;
   font-weight: bold;
 }
 
 canvas {
-  background: white;
   margin: 20px 0;
+  background: white;
   padding: 10px;
-  border-radius: 8px;
 }
