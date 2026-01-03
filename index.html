@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Solar Tracker Dashboard</title>
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <h1>Solar Tracker Monitoring Dashboard</h1>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="openTab('live')">Live</button>
+    <button class="tab-btn" onclick="openTab('graphs')">Graphs</button>
+    <button class="tab-btn" onclick="openTab('alerts')">Alerts</button>
+    <button class="tab-btn" onclick="openTab('about')">About</button>
+  </div>
+
+  <!-- LIVE TAB -->
+  <div id="live" class="tab-content active">
+    <h2>Live Readings</h2>
+
+    <div class="grid">
+      <div class="card">Lux: <span id="lux">--</span></div>
+      <div class="card">Horizontal Error: <span id="hError">--</span></div>
+      <div class="card">Vertical Error: <span id="vError">--</span></div>
+      <div class="card">Servo X: <span id="servoX">--</span>°</div>
+      <div class="card">Servo Y: <span id="servoY">--</span>°</div>
+      <div class="card">Solar Voltage: <span id="solarV">--</span> V</div>
+      <div class="card">Solar Current: <span id="solarI">--</span> mA</div>
+      <div class="card">Battery Voltage: <span id="batteryV">--</span> V</div>
+      <div class="card highlight">Power: <span id="power">--</span> W</div>
+    </div>
+  </div>
+
+  <!-- GRAPHS TAB -->
+  <div id="graphs" class="tab-content">
+    <h2>Historical Graphs</h2>
+
+    <canvas id="luxChart"></canvas>
+    <canvas id="hErrorChart"></canvas>
+    <canvas id="vErrorChart"></canvas>
+    <canvas id="servoXChart"></canvas>
+    <canvas id="servoYChart"></canvas>
+    <canvas id="solarVChart"></canvas>
+    <canvas id="solarIChart"></canvas>
+    <canvas id="batteryVChart"></canvas>
+  </div>
+
+  <!-- ALERTS TAB -->
+  <div id="alerts" class="tab-content">
+    <h2>System Alerts</h2>
+    <ul id="alertList">
+      <li>No alerts</li>
+    </ul>
+  </div>
+
+  <!-- ABOUT TAB -->
+  <div id="about" class="tab-content">
+    <h2>About System</h2>
+    <p>
+      Dual-axis solar tracking system using Arduino, ESP8266 and cloud-based
+      monitoring via ThingSpeak. Designed for efficiency monitoring,
+      power optimization, and predictive maintenance.
+    </p>
+  </div>
+
+  <!-- JS -->
+  <script src="script.js"></script>
+
+</body>
+</html>
