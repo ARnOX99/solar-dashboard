@@ -2,112 +2,106 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>IoT Solar Tracking System</title>
-
+  <title>Solar Tracking Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="style.css">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-
 <body>
 
-<header>
-  <h1>IoT Based Dual-Axis Solar Tracking System</h1>
-  <p>Monitoring • Intelligence • Energy Optimization</p>
-</header>
-
-<nav>
-  <a href="#overview">Overview</a>
-  <a href="#live">Live Data</a>
-  <a href="#graphs">Graphs</a>
-  <a href="#alerts">Alerts</a>
-  <a href="#control">Control</a>
-  <a href="#architecture">Architecture</a>
-  <a href="#about">About</a>
+<!-- TOP NAVIGATION -->
+<nav class="top-nav">
+  <div class="nav-title">Solar Tracker</div>
+  <div class="nav-links">
+    <button onclick="showTab('home')">Home</button>
+    <button onclick="showTab('dashboard')">Live Dashboard</button>
+    <button onclick="showTab('history')">History</button>
+    <button onclick="showTab('alerts')">Alerts</button>
+    <button onclick="showTab('power')">Power Mode</button>
+    <button onclick="showTab('about')">About</button>
+  </div>
 </nav>
 
-<!-- OVERVIEW -->
-<section id="overview" class="section light">
-  <h2>Project Overview</h2>
-  <p>
-    This project implements an intelligent dual-axis solar tracking system
-    integrated with IoT for real-time monitoring, data analytics, and alerting.
-  </p>
+<!-- HOME -->
+<section id="home" class="tab-section active">
+  <div class="card">
+    <h2>IoT-Based Dual-Axis Solar Tracking and Energy Monitoring System</h2>
+    <img src="images/project_photo.png" alt="Project Image" class="hero-img">
+  </div>
 
-  <img src="images/system_overview.png" alt="System Overview Diagram" class="image">
+  <div class="card">
+    <h3>Abstract</h3>
+    <p>
+      The rapid increase in global energy demand and the limitations of conventional fixed-position
+      solar panels have emphasized the need for intelligent solar tracking systems. This project
+      presents an IoT-based dual-axis solar tracking and energy monitoring system designed to
+      maximize solar energy harvesting efficiency while enabling real-time monitoring and control.
+      <br><br>
+      The system utilizes a dual-axis tracking mechanism driven by servo motors to dynamically
+      align the solar panel in both horizontal and vertical directions based on sunlight intensity.
+      A BH1750 digital light sensor provides accurate ambient light measurements, while multiple
+      LDR sensors assist in detecting directional light imbalance for precise tracking error
+      correction.
+      <br><br>
+      Electrical performance parameters such as voltage and current are continuously monitored
+      using an INA219 power sensor. Solar energy is stored in dual lithium-ion batteries through a
+      controlled charging module. An ESP8266 Wi-Fi module enables seamless data transmission to
+      the ThingSpeak IoT platform. A custom web dashboard provides live monitoring, historical
+      analysis, alerts, and intelligent power management features.
+    </p>
+  </div>
 
-  <div class="info-grid">
-    <div class="info-box blue">Dual-Axis Tracking</div>
-    <div class="info-box green">Cloud Monitoring</div>
-    <div class="info-box orange">Smart Alerts</div>
-    <div class="info-box purple">Power Saving Mode</div>
+  <div class="card">
+    <h3>System Diagrams</h3>
+    <div class="img-row">
+      <img src="images/block_diagram.png" alt="Block Diagram">
+      <img src="images/circuit_diagram.png" alt="Circuit Diagram">
+    </div>
   </div>
 </section>
 
-<!-- LIVE DATA -->
-<section id="live" class="section dark">
-  <h2>Live System Readings</h2>
-
-  <div class="card-grid">
-    <div class="card">Lux <span id="lux">--</span></div>
-    <div class="card">Horizontal Error <span id="hError">--</span></div>
-    <div class="card">Vertical Error <span id="vError">--</span></div>
-    <div class="card">Servo X <span id="servoX">--</span>°</div>
-    <div class="card">Servo Y <span id="servoY">--</span>°</div>
-    <div class="card">Solar Voltage <span id="solarV">--</span> V</div>
-    <div class="card">Solar Current <span id="solarI">--</span> A</div>
-    <div class="card highlight">Power <span id="power">--</span> W</div>
-    <div class="card">Battery Voltage <span id="batteryV">--</span> V</div>
+<!-- LIVE DASHBOARD -->
+<section id="dashboard" class="tab-section">
+  <div class="card">
+    <h2>Live Dashboard</h2>
+    <p>Live sensor values from ThingSpeak will appear here.</p>
   </div>
 </section>
 
-<!-- GRAPHS -->
-<section id="graphs" class="section light">
-  <h2>Historical Graphs</h2>
-
-  <canvas id="luxChart"></canvas>
-  <canvas id="hErrorChart"></canvas>
-  <canvas id="vErrorChart"></canvas>
-  <canvas id="batteryChart"></canvas>
+<!-- HISTORY -->
+<section id="history" class="tab-section">
+  <div class="card">
+    <h2>History</h2>
+    <p>Historical charts from ThingSpeak will be embedded here.</p>
+  </div>
 </section>
 
 <!-- ALERTS -->
-<section id="alerts" class="section warning">
-  <h2>System Alerts</h2>
-  <ul id="alertList"></ul>
+<section id="alerts" class="tab-section">
+  <div class="card">
+    <h2>System Alerts</h2>
+    <p>Cleaning alerts, efficiency alerts, and system warnings.</p>
+  </div>
 </section>
 
-<!-- CONTROL -->
-<section id="control" class="section control">
-  <h2>Battery Power Control</h2>
-  <p>
-    Switch solar charging path between Battery 1 and Battery 2 remotely.
-  </p>
-
-  <button class="control-btn" onclick="sendBatteryCommand(1)">Use Battery 1</button>
-  <button class="control-btn" onclick="sendBatteryCommand(2)">Use Battery 2</button>
-
-  <p id="controlStatus">Status: --</p>
-</section>
-
-<!-- ARCHITECTURE -->
-<section id="architecture" class="section light">
-  <h2>System Architecture</h2>
-
-  <img src="images/architecture.png" alt="System Architecture Diagram" class="image">
-
-  <p>
-    Arduino performs sensing and control. ESP8266 acts as IoT gateway.
-    ThingSpeak stores data. Website visualizes and controls the system.
-  </p>
+<!-- POWER MODE -->
+<section id="power" class="tab-section">
+  <div class="card">
+    <h2>Power Mode Control</h2>
+    <button class="action-btn">Switch Battery</button>
+    <p>Current Mode: NORMAL</p>
+  </div>
 </section>
 
 <!-- ABOUT -->
-<section id="about" class="section dark">
-  <h2>About the Project</h2>
-  <p>
-    This project demonstrates integration of embedded systems, IoT,
-    renewable energy optimization, and data-driven intelligence.
-  </p>
+<section id="about" class="tab-section">
+  <div class="card">
+    <h2>About This Project</h2>
+    <p>
+      This system is designed to demonstrate intelligent solar energy optimization using
+      embedded systems and IoT technologies. Dual-axis tracking ensures maximum sunlight
+      capture, while cloud connectivity enables remote monitoring and control.
+    </p>
+  </div>
 </section>
 
 <script src="script.js"></script>
