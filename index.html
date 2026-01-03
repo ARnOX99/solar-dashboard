@@ -12,70 +12,58 @@
 
 <header>
   <h1>IoT Based Dual-Axis Solar Tracking System</h1>
-  <p>Real-time Monitoring • Intelligent Alerts • Cloud Analytics</p>
+  <p>Monitoring • Intelligence • Energy Optimization</p>
 </header>
 
 <nav>
-  <button onclick="openTab('home')">Home</button>
-  <button onclick="openTab('live')">Live Dashboard</button>
-  <button onclick="openTab('graphs')">Graphs</button>
-  <button onclick="openTab('alerts')">Alerts</button>
-  <button onclick="openTab('architecture')">Architecture</button>
-  <button onclick="openTab('about')">About</button>
+  <a href="#overview">Overview</a>
+  <a href="#live">Live Data</a>
+  <a href="#graphs">Graphs</a>
+  <a href="#alerts">Alerts</a>
+  <a href="#control">Control</a>
+  <a href="#architecture">Architecture</a>
+  <a href="#about">About</a>
 </nav>
 
-<!-- HOME -->
-<section id="home" class="tab">
+<!-- OVERVIEW -->
+<section id="overview" class="section light">
   <h2>Project Overview</h2>
   <p>
-    This project presents an IoT-enabled dual-axis solar tracking system
-    designed to maximize solar energy harvesting while providing intelligent
-    performance monitoring and alerts.
+    This project implements an intelligent dual-axis solar tracking system
+    integrated with IoT for real-time monitoring, data analytics, and alerting.
   </p>
 
+  <img src="images/system_overview.png" alt="System Overview Diagram" class="image">
+
   <div class="info-grid">
-    <div class="info-box">
-      <h3>Dual-Axis Tracking</h3>
-      <p>Tracks the sun in both horizontal and vertical directions using sensors and servo motors.</p>
-    </div>
-
-    <div class="info-box">
-      <h3>IoT Monitoring</h3>
-      <p>ESP8266 uploads real-time system data to the ThingSpeak cloud.</p>
-    </div>
-
-    <div class="info-box">
-      <h3>Intelligent Alerts</h3>
-      <p>Detects low battery, panel dirt, and abnormal performance conditions.</p>
-    </div>
-
-    <div class="info-box">
-      <h3>Energy Saving Mode</h3>
-      <p>Automatically reduces power usage during night or low-light conditions.</p>
-    </div>
+    <div class="info-box blue">Dual-Axis Tracking</div>
+    <div class="info-box green">Cloud Monitoring</div>
+    <div class="info-box orange">Smart Alerts</div>
+    <div class="info-box purple">Power Saving Mode</div>
   </div>
 </section>
 
-<!-- LIVE -->
-<section id="live" class="tab">
+<!-- LIVE DATA -->
+<section id="live" class="section dark">
   <h2>Live System Readings</h2>
 
   <div class="card-grid">
-    <div class="card">Light Intensity (Lux): <span id="lux">--</span></div>
-    <div class="card">Horizontal Error: <span id="hError">--</span></div>
-    <div class="card">Vertical Error: <span id="vError">--</span></div>
-    <div class="card">Servo X Angle: <span id="servoX">--</span>°</div>
-    <div class="card">Servo Y Angle: <span id="servoY">--</span>°</div>
-    <div class="card">Solar Voltage: <span id="solarV">--</span> V</div>
-    <div class="card">Solar Current: <span id="solarI">--</span> A</div>
-    <div class="card highlight">Power Output: <span id="power">--</span> W</div>
-    <div class="card">Battery Voltage: <span id="batteryV">--</span> V</div>
+    <div class="card">Lux <span id="lux">--</span></div>
+    <div class="card">Horizontal Error <span id="hError">--</span></div>
+    <div class="card">Vertical Error <span id="vError">--</span></div>
+    <div class="card">Servo X <span id="servoX">--</span>°</div>
+    <div class="card">Servo Y <span id="servoY">--</span>°</div>
+    <div class="card">Solar Voltage <span id="solarV">--</span> V</div>
+    <div class="card">Solar Current <span id="solarI">--</span> A</div>
+    <div class="card highlight">Power <span id="power">--</span> W</div>
+    <div class="card">Battery Voltage <span id="batteryV">--</span> V</div>
   </div>
 </section>
 
 <!-- GRAPHS -->
-<section id="graphs" class="tab">
-  <h2>Historical Data & Analysis</h2>
+<section id="graphs" class="section light">
+  <h2>Historical Graphs</h2>
+
   <canvas id="luxChart"></canvas>
   <canvas id="hErrorChart"></canvas>
   <canvas id="vErrorChart"></canvas>
@@ -83,40 +71,42 @@
 </section>
 
 <!-- ALERTS -->
-<section id="alerts" class="tab">
+<section id="alerts" class="section warning">
   <h2>System Alerts</h2>
   <ul id="alertList"></ul>
 </section>
 
-<!-- ARCHITECTURE -->
-<section id="architecture" class="tab">
-  <h2>System Architecture</h2>
+<!-- CONTROL -->
+<section id="control" class="section control">
+  <h2>Battery Power Control</h2>
   <p>
-    The system consists of an Arduino Uno as the control unit, responsible for
-    sensor data acquisition and motor control. An ESP8266 module acts as the IoT
-    gateway, transmitting selected parameters to the cloud.
+    Switch solar charging path between Battery 1 and Battery 2 remotely.
   </p>
 
-  <ul>
-    <li>Sensors → Arduino (Decision Making)</li>
-    <li>Arduino → ESP8266 (Serial Communication)</li>
-    <li>ESP8266 → ThingSpeak (Cloud Upload)</li>
-    <li>Website → ThingSpeak API (Data Visualization)</li>
-  </ul>
+  <button class="control-btn" onclick="sendBatteryCommand(1)">Use Battery 1</button>
+  <button class="control-btn" onclick="sendBatteryCommand(2)">Use Battery 2</button>
+
+  <p id="controlStatus">Status: --</p>
+</section>
+
+<!-- ARCHITECTURE -->
+<section id="architecture" class="section light">
+  <h2>System Architecture</h2>
+
+  <img src="images/architecture.png" alt="System Architecture Diagram" class="image">
+
+  <p>
+    Arduino performs sensing and control. ESP8266 acts as IoT gateway.
+    ThingSpeak stores data. Website visualizes and controls the system.
+  </p>
 </section>
 
 <!-- ABOUT -->
-<section id="about" class="tab">
+<section id="about" class="section dark">
   <h2>About the Project</h2>
   <p>
-    This project was developed to demonstrate how embedded systems, IoT, and
-    renewable energy technologies can be integrated to create intelligent
-    energy solutions.
-  </p>
-
-  <p>
-    The system improves energy efficiency, reduces maintenance effort, and
-    provides actionable insights through data analytics.
+    This project demonstrates integration of embedded systems, IoT,
+    renewable energy optimization, and data-driven intelligence.
   </p>
 </section>
 
