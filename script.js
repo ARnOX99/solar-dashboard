@@ -1,5 +1,11 @@
-const CHANNEL_ID = "YOUR_CHANNEL_ID";
-const READ_API_KEY = "YOUR_READ_API_KEY";
+function openTab(tabId) {
+  document.querySelectorAll(".tab").forEach(tab => tab.style.display = "none");
+  document.getElementById(tabId).style.display = "block";
+}
+
+openTab("home");
+const CHANNEL_ID = "3209440";
+const READ_API_KEY = "RAP1FJI6NKHKOEI2";
 
 const API_URL =
   `https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds.json?results=20&api_key=${READ_API_KEY}`;
@@ -123,3 +129,4 @@ function checkAlerts(lux, power, batteryV) {
 // REFRESH EVERY 20 SECONDS
 setInterval(fetchData, 20000);
 fetchData();
+
