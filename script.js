@@ -1,45 +1,44 @@
-function openTab(tabId, btn) {
-  // Hide all sections
-  document.querySelectorAll('.tab-content').forEach(section => {
-    section.classList.remove('active');
+function openTab(tabId, button) {
+  document.querySelectorAll('.tab-content').forEach(sec => {
+    sec.classList.remove('active');
   });
-
-  // Deactivate all tabs
   document.querySelectorAll('.tab').forEach(tab => {
     tab.classList.remove('active');
   });
-
-  // Show selected section
   document.getElementById(tabId).classList.add('active');
-
-  // Activate clicked tab
-  btn.classList.add('active');
+  button.classList.add('active');
 }
 
 let systemMode = "AUTO";
 let activeBattery = "NONE";
 
 function sendCommand(cmd) {
-  if (cmd === "AUTO") {
-    systemMode = "AUTO";
-  }
-  if (cmd === "MANUAL") {
-    systemMode = "MANUAL";
-  }
-  if (cmd === "BAT1" && systemMode === "MANUAL") {
-    activeBattery = "Battery 1";
-  }
-  if (cmd === "BAT2" && systemMode === "MANUAL") {
-    activeBattery = "Battery 2";
-  }
+  try {
+    if (cmd === "AUTO") {
+      systemMode = "AUTO";
+      activeBattery = "AUTO SELECT";
+    } else if (cmd === "MANUAL") {
+      systemMode = "MANUAL";
+      activeBattery = "NONE";
+    } else if (systemMode === "MANUAL") {
+      if (cmd === "BAT1") activeBattery = "Battery 1";
+      else if (cmd === "BAT2") activeBattery = "Battery 2";
+    } else {
+      console.warn("Ignoring battery switch command in AUTO mode.");
+      return;
+    }
 
-  updateUI();
+    updateStatus();
+    console.log("Command sent:", cmd);
 
-  console.log("Command sent:", cmd);
-  // This is where ThingSpeak / ESP API will be added
+    // TODO: Add ThingSpeak API call here to send command to ESP
+
+  } catch (err) {
+    console.error("sendCommand error:", err);
+  }
 }
 
-function updateUI() {
+function updateStatus() {
   document.getElementById("modeStatus").innerText = systemMode;
   document.getElementById("batteryStatus").innerText = activeBattery;
 }
