@@ -1,79 +1,77 @@
 body {
   margin: 0;
   font-family: Arial, sans-serif;
-  scroll-behavior: smooth;
+  background: #f5f7fa;
 }
 
-header {
-  background: linear-gradient(135deg, #0f2027, #203a43);
-  color: white;
-  text-align: center;
-  padding: 30px;
-}
-
-nav {
-  background: #111;
-  padding: 10px;
-  text-align: center;
+.top-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #ffffff;
+  padding: 10px 20px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
   position: sticky;
   top: 0;
-  z-index: 100;
 }
 
-nav a {
-  color: white;
-  margin: 10px;
-  text-decoration: none;
+.nav-title {
   font-weight: bold;
+  font-size: 18px;
 }
 
-.section {
-  padding: 40px;
-}
-
-.light { background: #f4f6f8; }
-.dark { background: #1e272e; color: white; }
-.warning { background: #fff3cd; }
-.control { background: #e8f0fe; }
-
-.card-grid, .info-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 15px;
-}
-
-.card, .info-box {
-  background: white;
-  padding: 15px;
-  border-radius: 6px;
-  text-align: center;
-}
-
-.highlight {
-  background: #c8e6c9;
-  font-weight: bold;
-}
-
-.info-box.blue { background: #bbdefb; }
-.info-box.green { background: #c8e6c9; }
-.info-box.orange { background: #ffe0b2; }
-.info-box.purple { background: #e1bee7; }
-
-.control-btn {
-  padding: 12px 20px;
-  margin: 10px;
-  font-size: 16px;
+.nav-links button {
+  background: none;
+  border: none;
+  margin-left: 10px;
+  font-size: 14px;
   cursor: pointer;
 }
 
-.image {
-  max-width: 100%;
-  margin: 20px 0;
-  border-radius: 6px;
+.nav-links button:hover {
+  color: #0077ff;
 }
 
-canvas {
-  background: white;
-  margin: 20px 0;
-  padding: 10px;
+.tab-section {
+  display: none;
+  padding: 30px;
+}
+
+.tab-section.active {
+  display: block;
+}
+
+.card {
+  background: #ffffff;
+  max-width: 900px;
+  margin: 20px auto;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.hero-img {
+  width: 100%;
+  max-height: 350px;
+  object-fit: contain;
+}
+
+.img-row {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.img-row img {
+  width: 100%;
+  max-width: 420px;
+}
+
+.action-btn {
+  padding: 10px 20px;
+  background: #0077ff;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
 }
