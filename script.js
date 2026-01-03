@@ -130,3 +130,11 @@ function checkAlerts(lux, power, batteryV) {
 setInterval(fetchData, 20000);
 fetchData();
 
+function sendBatteryCommand(battery) {
+  document.getElementById("controlStatus").innerText =
+    "Command sent: Switch to Battery " + battery;
+
+  // Later this will go:
+  // Website → API → ESP → Arduino → Relay
+}
+
