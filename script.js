@@ -1,6 +1,6 @@
 // ============ CONFIGURATION ============
-const THINGSPEAK_CHANNEL_ID = '3209440';  // CHANGE THIS
-const THINGSPEAK_READ_KEY = 'RAP1FJI6NKHKOEI2';  // CHANGE THIS
+const THINGSPEAK_CHANNEL_ID = 'YOUR_CHANNEL_ID';  // CHANGE THIS
+const THINGSPEAK_READ_KEY = 'YOUR_READ_API_KEY';  // CHANGE THIS
 const UPDATE_INTERVAL = 20000; // 20 seconds
 
 // ============ GLOBAL VARIABLES ============
@@ -97,7 +97,7 @@ function updateLiveReadings(data) {
     document.getElementById('solarI').textContent = parseFloat(data.field7 || 0).toFixed(2);
     document.getElementById('battV').textContent = parseFloat(data.field8 || 0).toFixed(2);
 
-    // Calculate power (V × I)
+    // *** CALCULATE POWER: P = V × I ***
     const voltage = parseFloat(data.field6 || 0);
     const current = parseFloat(data.field7 || 0);
     const power = (voltage * current).toFixed(2);
@@ -225,7 +225,6 @@ async function loadHistoricalData() {
             createCharts(data.feeds);
         } else {
             console.warn('No historical data available');
-            // Show message in charts
             showNoDataMessage();
         }
     } catch (error) {
@@ -236,20 +235,20 @@ async function loadHistoricalData() {
 
 // Show message when no data available
 function showNoDataMessage() {
-    const chartContainers = document.querySelectorAll('.chart-container');
+    const chartContainers = document.querySelectorAll('.chart-container-compact');
     chartContainers.forEach(container => {
         const canvas = container.querySelector('canvas');
         if (canvas) {
             const ctx = canvas.getContext('2d');
-            ctx.font = '16px Arial';
+            ctx.font = '14px Arial';
             ctx.fillStyle = '#64748b';
             ctx.textAlign = 'center';
-            ctx.fillText('No data available. Please check ThingSpeak configuration.', canvas.width / 2, canvas.height / 2);
+            ctx.fillText('No data available', canvas.width / 2, canvas.height / 2);
         }
     });
 }
 
-// ============ CREATE CHARTS ============
+// ============ CREATE INDIVIDUAL CHARTS ============
 function createCharts(feeds) {
     // Extract timestamps
     const timestamps = feeds.map(f => {
@@ -257,11 +256,11 @@ function createCharts(feeds) {
         return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     });
 
-    // 1. Intensity Chart (BH1750)
-    createChart('chartIntensity', {
+    // 1. Light Intensity (BH1750)
+    createCompactChart('chartIntensity', {
         labels: timestamps,
         datasets: [{
-            label: 'Light Intensity (Lux)',
+            label: 'Lux',
             data: feeds.map(f => parseFloat(f.field1 || 0)),
             borderColor: '#f59e0b',
             backgroundColor: 'rgba(245, 158, 11, 0.1)',
@@ -270,76 +269,89 @@ function createCharts(feeds) {
         }]
     });
 
-    // 2. Tracking Errors Chart
-    createChart('chartErrors', {
-        labels: timestamps,
-        datasets: [
-            {
-                label: 'Horizontal Error',
-                data: feeds.map(f => parseInt(f.field2 || 0)),
-                borderColor: '#2563eb',
-                backgroundColor: 'rgba(37, 99, 235, 0.1)',
-                tension: 0.4
-            },
-            {
-                label: 'Vertical Error',
-                data: feeds.map(f => parseInt(f.field3 || 0)),
-                borderColor: '#10b981',
-                backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                tension: 0.4
-            }
-        ]
-    });
-
-    // 3. Servo Positions Chart
-    createChart('chartServos', {
-        labels: timestamps,
-        datasets: [
-            {
-                label: 'Servo X (Horizontal)',
-                data: feeds.map(f => parseInt(f.field4 || 90)),
-                borderColor: '#8b5cf6',
-                backgroundColor: 'rgba(139, 92, 246, 0.1)',
-                tension: 0.4
-            },
-            {
-                label: 'Servo Y (Vertical)',
-                data: feeds.map(f => parseInt(f.field5 || 90)),
-                borderColor: '#ec4899',
-                backgroundColor: 'rgba(236, 72, 153, 0.1)',
-                tension: 0.4
-            }
-        ]
-    });
-
-    // 4. Solar Performance Chart (Dual Y-axis)
-    createChart('chartSolar', {
-        labels: timestamps,
-        datasets: [
-            {
-                label: 'Voltage (V)',
-                data: feeds.map(f => parseFloat(f.field6 || 0)),
-                borderColor: '#ef4444',
-                backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                yAxisID: 'y',
-                tension: 0.4
-            },
-            {
-                label: 'Current (mA)',
-                data: feeds.map(f => parseFloat(f.field7 || 0)),
-                borderColor: '#3b82f6',
-                backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                yAxisID: 'y1',
-                tension: 0.4
-            }
-        ]
-    }, true); // Dual axis enabled
-
-    // 5. Battery Voltage Chart
-    createChart('chartBattery', {
+    // 2. Horizontal Error
+    createCompactChart('chartHError', {
         labels: timestamps,
         datasets: [{
-            label: 'Battery Voltage (V)',
+            label: 'H Error',
+            data: feeds.map(f => parseInt(f.field2 || 0)),
+            borderColor: '#2563eb',
+            backgroundColor: 'rgba(37, 99, 235, 0.1)',
+            tension: 0.4,
+            fill: true
+        }]
+    });
+
+    // 3. Vertical Error
+    createCompactChart('chartVError', {
+        labels: timestamps,
+        datasets: [{
+            label: 'V Error',
+            data: feeds.map(f => parseInt(f.field3 || 0)),
+            borderColor: '#10b981',
+            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+            tension: 0.4,
+            fill: true
+        }]
+    });
+
+    // 4. Servo X Position
+    createCompactChart('chartServoX', {
+        labels: timestamps,
+        datasets: [{
+            label: 'Degrees',
+            data: feeds.map(f => parseInt(f.field4 || 90)),
+            borderColor: '#8b5cf6',
+            backgroundColor: 'rgba(139, 92, 246, 0.1)',
+            tension: 0.4,
+            fill: true
+        }]
+    });
+
+    // 5. Servo Y Position
+    createCompactChart('chartServoY', {
+        labels: timestamps,
+        datasets: [{
+            label: 'Degrees',
+            data: feeds.map(f => parseInt(f.field5 || 90)),
+            borderColor: '#ec4899',
+            backgroundColor: 'rgba(236, 72, 153, 0.1)',
+            tension: 0.4,
+            fill: true
+        }]
+    });
+
+    // 6. Solar Voltage
+    createCompactChart('chartVoltage', {
+        labels: timestamps,
+        datasets: [{
+            label: 'Volts',
+            data: feeds.map(f => parseFloat(f.field6 || 0)),
+            borderColor: '#ef4444',
+            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+            tension: 0.4,
+            fill: true
+        }]
+    });
+
+    // 7. Solar Current
+    createCompactChart('chartCurrent', {
+        labels: timestamps,
+        datasets: [{
+            label: 'mA',
+            data: feeds.map(f => parseFloat(f.field7 || 0)),
+            borderColor: '#3b82f6',
+            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+            tension: 0.4,
+            fill: true
+        }]
+    });
+
+    // 8. Battery Voltage
+    createCompactChart('chartBattery', {
+        labels: timestamps,
+        datasets: [{
+            label: 'Volts',
             data: feeds.map(f => parseFloat(f.field8 || 0)),
             borderColor: '#10b981',
             backgroundColor: 'rgba(16, 185, 129, 0.2)',
@@ -347,10 +359,53 @@ function createCharts(feeds) {
             tension: 0.4
         }]
     });
+
+    // *** 9. SOLAR POWER (CALCULATED: P = V × I) ***
+    const powerData = feeds.map(f => {
+        const voltage = parseFloat(f.field6 || 0);
+        const current = parseFloat(f.field7 || 0);
+        return (voltage * current).toFixed(2);
+    });
+
+    createCompactChart('chartPower', {
+        labels: timestamps,
+        datasets: [{
+            label: 'mW',
+            data: powerData,
+            borderColor: '#f97316',
+            backgroundColor: 'rgba(249, 115, 22, 0.1)',
+            tension: 0.4,
+            fill: true
+        }]
+    });
+
+    // 10. Average LDR (from status field if available)
+    const avgLDRData = feeds.map(f => {
+        if (f.status && f.status.includes('LDRs:')) {
+            const ldrPart = f.status.split(',').find(p => p.startsWith('LDRs:'));
+            if (ldrPart) {
+                const ldrs = ldrPart.split(':')[1].split('/').map(v => parseInt(v || 0));
+                return Math.round((ldrs[0] + ldrs[1] + ldrs[2] + ldrs[3]) / 4);
+            }
+        }
+        return 0;
+    });
+
+    createCompactChart('chartAvgLDR', {
+        labels: timestamps,
+        datasets: [{
+            label: 'Units',
+            data: avgLDRData,
+            borderColor: '#6366f1',
+            backgroundColor: 'rgba(99, 102, 241, 0.1)',
+            tension: 0.4,
+            fill: true
+        }]
+    });
 }
 
-// ============ CREATE INDIVIDUAL CHART ============
-function createChart(canvasId, data, dualAxis = false) {
+// ============ CREATE COMPACT CHART HELPER ============
+function createCompactChart(canvasId, data) {
     const ctx = document.getElementById(canvasId);
     if (!ctx) {
         console.error(`Canvas element ${canvasId} not found`);
@@ -365,20 +420,22 @@ function createChart(canvasId, data, dualAxis = false) {
     const options = {
         responsive: true,
         maintainAspectRatio: true,
+        aspectRatio: 2,
         plugins: {
             legend: {
-                display: true,
-                position: 'top',
-                labels: {
-                    padding: 15,
-                    font: {
-                        size: 12
-                    }
-                }
+                display: false  // Hide legend for compact view
             },
             tooltip: {
                 mode: 'index',
-                intersect: false
+                intersect: false,
+                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                padding: 10,
+                titleFont: {
+                    size: 12
+                },
+                bodyFont: {
+                    size: 11
+                }
             }
         },
         scales: {
@@ -386,27 +443,27 @@ function createChart(canvasId, data, dualAxis = false) {
                 beginAtZero: true,
                 grid: {
                     color: 'rgba(0, 0, 0, 0.05)'
+                },
+                ticks: {
+                    font: {
+                        size: 10
+                    }
                 }
             },
             x: {
                 grid: {
                     display: false
+                },
+                ticks: {
+                    font: {
+                        size: 9
+                    },
+                    maxRotation: 45,
+                    minRotation: 45
                 }
             }
         }
     };
-
-    // Add second Y-axis for dual-axis charts
-    if (dualAxis) {
-        options.scales.y1 = {
-            type: 'linear',
-            position: 'right',
-            beginAtZero: true,
-            grid: {
-                drawOnChartArea: false
-            }
-        };
-    }
 
     charts[canvasId] = new Chart(ctx, {
         type: 'line',
@@ -609,4 +666,3 @@ window.onerror = function(msg, url, lineNo, columnNo, error) {
     console.error('Error: ', msg, '\nURL: ', url, '\nLine: ', lineNo, '\nColumn: ', columnNo, '\nError object: ', error);
     return false;
 };
-
