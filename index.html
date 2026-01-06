@@ -1,89 +1,331 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Solar Tracker Dashboard</title>
-  <link rel="stylesheet" href="style.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solar Tracker Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-  <header>
-    <h1>Dual Axis Solar Tracking System</h1>
-    <nav>
-      <button class="tab active" onclick="openTab('home', this)">Home</button>
-      <button class="tab" onclick="openTab('overview', this)">System Overview</button>
-      <button class="tab" onclick="openTab('live', this)">Live Dashboard</button>
-      <button class="tab" onclick="openTab('history', this)">History</button>
-      <button class="tab" onclick="openTab('alerts', this)">Alerts</button>
-      <button class="tab" onclick="openTab('power', this)">Power & Control</button>
-      <button class="tab" onclick="openTab('about', this)">About</button>
-    </nav>
-  </header>
+    <div class="container">
+        <!-- Header with Solar Model Image -->
+        <div class="header">
+            <div class="header-content">
+                <div class="header-text">
+                    <h1>☀️ Solar Tracker Dashboard</h1>
+                    <p>Real-time monitoring and control system</p>
+                </div>
+                <div class="header-image">
+                    <img src="images/solar-model.jpg" alt="Solar Tracker Model" id="solarModelImg">
+                </div>
+            </div>
+        </div>
 
-  <main>
-    <section id="home" class="tab-content active">
-      <h2>Welcome</h2>
-      <p>This project implements an intelligent dual-axis solar tracking system integrated with IoT-based monitoring, power management, and remote control.</p>
-      <img src="project_photo.jpg" alt="Project Photo" style="max-width:100%;margin-top:15px" />
-      <h3>Block Diagram</h3>
-      <img src="block_diagram.png" alt="Block Diagram" style="max-width:100%;margin-top:10px" />
-      <h3>Circuit Diagram</h3>
-      <img src="circuit_diagram.png" alt="Circuit Diagram" style="max-width:100%;margin-top:10px" />
-    </section>
+        <!-- Navigation Tabs -->
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('live')">📊 Live Readings</button>
+            <button class="tab" onclick="switchTab('history')">📈 Historical Data</button>
+            <button class="tab" onclick="switchTab('alerts')">🔔 Alerts</button>
+            <button class="tab" onclick="switchTab('control')">🎛️ Controls</button>
+            <button class="tab" onclick="switchTab('about')">ℹ️ About</button>
+        </div>
 
-    <section id="overview" class="tab-content">
-      <h2>System Overview</h2>
-      <p>Arduino Uno controls sensors and motors; ESP8266 handles WiFi and ThingSpeak communication.</p>
-      <p>Sensors include BH1750 (light intensity), LDRs for directional light sensing, INA219 for current measurement, and voltage sensing on ESP analog input.</p>
-      <p>Servos adjust the solar panel’s position based on sensor data. Power management includes two batteries with relay switching.</p>
-    </section>
+        <!-- Content Area -->
+        <div class="content">
+            <!-- Live Readings Tab -->
+            <div id="live" class="tab-content active">
+                <div class="status-bar">
+                    <div class="status-badge active" id="systemStatus">
+                        <div class="status-dot"></div>
+                        <span>System Active</span>
+                    </div>
+                    <div class="last-update" id="lastUpdate">Last updated: Never</div>
+                </div>
 
-    <section id="live" class="tab-content">
-      <h2>Live Dashboard</h2>
-      <iframe width="100%" height="300" src="https://thingspeak.com/channels/YOUR_CHANNEL_ID/charts/1?bgcolor=%23ffffff&color=%23d62020&dynamic=true&results=60&type=line"></iframe>
-      <iframe width="100%" height="300" src="https://thingspeak.com/channels/YOUR_CHANNEL_ID/charts/2?bgcolor=%23ffffff&color=%23009f40&dynamic=true&results=60&type=line"></iframe>
-      <iframe width="100%" height="300" src="https://thingspeak.com/channels/YOUR_CHANNEL_ID/charts/3?bgcolor=%23ffffff&color=%230073bf&dynamic=true&results=60&type=line"></iframe>
-      <iframe width="100%" height="300" src="https://thingspeak.com/channels/YOUR_CHANNEL_ID/charts/4?bgcolor=%23ffffff&color=%23ff8c00&dynamic=true&results=60&type=line"></iframe>
-    </section>
+                <div class="readings-grid">
+                    <div class="reading-card">
+                        <div class="reading-label">☀️ Light Intensity (BH1750)</div>
+                        <div class="reading-value" id="bhLux">0</div>
+                        <div class="reading-unit">lux</div>
+                    </div>
 
-    <section id="history" class="tab-content">
-      <h2>History & Analysis</h2>
-      <p>Review past data and analyze system performance.</p>
-    </section>
+                    <div class="reading-card">
+                        <div class="reading-label">↔️ Horizontal Error</div>
+                        <div class="reading-value" id="hError">0</div>
+                        <div class="reading-unit">units</div>
+                    </div>
 
-    <section id="alerts" class="tab-content">
-      <h2>Alerts</h2>
-      <p>Cleaning alerts, low battery warnings, and system notifications will be displayed here.</p>
-    </section>
+                    <div class="reading-card">
+                        <div class="reading-label">↕️ Vertical Error</div>
+                        <div class="reading-value" id="vError">0</div>
+                        <div class="reading-unit">units</div>
+                    </div>
 
-    <section id="power" class="tab-content">
-      <h2>Power & Control</h2>
+                    <div class="reading-card">
+                        <div class="reading-label">🔄 Servo X (Horizontal)</div>
+                        <div class="reading-value" id="servoX">90</div>
+                        <div class="reading-unit">degrees</div>
+                    </div>
 
-      <div class="card">
-        <p><b>System Mode:</b> <span id="modeStatus">AUTO</span></p>
-        <button onclick="sendCommand('AUTO')">AUTO Mode</button>
-        <button onclick="sendCommand('MANUAL')">MANUAL Mode</button>
-      </div>
+                    <div class="reading-card">
+                        <div class="reading-label">🔄 Servo Y (Vertical)</div>
+                        <div class="reading-value" id="servoY">90</div>
+                        <div class="reading-unit">degrees</div>
+                    </div>
 
-      <div class="card">
-        <p><b>Active Battery:</b> <span id="batteryStatus">NONE</span></p>
-        <button onclick="sendCommand('BAT1')">Battery 1</button>
-        <button onclick="sendCommand('BAT2')">Battery 2</button>
-      </div>
+                    <div class="reading-card">
+                        <div class="reading-label">⚡ Solar Voltage</div>
+                        <div class="reading-value" id="solarV">0.00</div>
+                        <div class="reading-unit">V</div>
+                    </div>
 
-      <p style="color:#666; font-size:0.9em;">
-        Note: In AUTO mode, battery switching commands may be ignored by Arduino.
-      </p>
-    </section>
+                    <div class="reading-card">
+                        <div class="reading-label">⚡ Solar Current</div>
+                        <div class="reading-value" id="solarI">0.00</div>
+                        <div class="reading-unit">mA</div>
+                    </div>
 
-    <section id="about" class="tab-content">
-      <h2>About Project</h2>
-      <p>
-        The dual-axis solar tracking system improves energy harvest by continuously adjusting the panel to face the sun.
-        It leverages real-time sensor data, cloud monitoring, and remote control to optimize performance and reliability.
-      </p>
-    </section>
-  </main>
+                    <div class="reading-card">
+                        <div class="reading-label">🔋 Battery Voltage</div>
+                        <div class="reading-value" id="battV">0.00</div>
+                        <div class="reading-unit">V</div>
+                    </div>
 
-  <script src="script.js"></script>
+                    <div class="reading-card">
+                        <div class="reading-label">💡 Solar Power</div>
+                        <div class="reading-value" id="solarP">0.00</div>
+                        <div class="reading-unit">mW</div>
+                    </div>
+
+                    <div class="reading-card">
+                        <div class="reading-label">📡 Average LDR</div>
+                        <div class="reading-value" id="avgLDR">0</div>
+                        <div class="reading-unit">units</div>
+                    </div>
+                </div>
+
+                <div class="info-section">
+                    <h3>Individual LDR Sensors</h3>
+                    <div class="ldr-grid">
+                        <div class="ldr-box">
+                            <strong>🌅 West:</strong> <span id="ldrW">0</span>
+                        </div>
+                        <div class="ldr-box">
+                            <strong>🌄 East:</strong> <span id="ldrE">0</span>
+                        </div>
+                        <div class="ldr-box">
+                            <strong>⬆️ Left:</strong> <span id="ldrL">0</span>
+                        </div>
+                        <div class="ldr-box">
+                            <strong>⬇️ Right:</strong> <span id="ldrR">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Historical Data Tab -->
+            <div id="history" class="tab-content">
+                <h2 style="margin-bottom: 20px;">📈 Historical Trends (ThingSpeak)</h2>
+
+                <div class="chart-container">
+                    <div class="chart-title">Light Intensity Over Time</div>
+                    <canvas id="chartIntensity"></canvas>
+                </div>
+
+                <div class="chart-container">
+                    <div class="chart-title">Tracking Errors</div>
+                    <canvas id="chartErrors"></canvas>
+                </div>
+
+                <div class="chart-container">
+                    <div class="chart-title">Servo Positions</div>
+                    <canvas id="chartServos"></canvas>
+                </div>
+
+                <div class="chart-container">
+                    <div class="chart-title">Solar Panel Performance</div>
+                    <canvas id="chartSolar"></canvas>
+                </div>
+
+                <div class="chart-container">
+                    <div class="chart-title">Battery Voltage</div>
+                    <canvas id="chartBattery"></canvas>
+                </div>
+            </div>
+
+            <!-- Alerts Tab -->
+            <div id="alerts" class="tab-content">
+                <h2 style="margin-bottom: 20px;">🔔 System Alerts</h2>
+
+                <div id="alertsContainer">
+                    <div class="alert info">
+                        <span style="font-size: 1.5em;">ℹ️</span>
+                        <span>No alerts at this time. System operating normally.</span>
+                    </div>
+                </div>
+
+                <div class="info-section">
+                    <h3>Smart Cleaning Alert System</h3>
+                    <p><strong>How it works:</strong></p>
+                    <ul>
+                        <li>Calibrates both BH1750 and LDR sensors when panel is clean</li>
+                        <li>Continuously monitors actual solar current vs expected current</li>
+                        <li>Calculates expected current based on current light intensity</li>
+                        <li>Triggers alert when actual current drops 30% below expected</li>
+                        <li>Cross-validates with both sensors to prevent false alarms</li>
+                    </ul>
+                </div>
+
+                <div class="controls">
+                    <button class="btn btn-primary" onclick="setBaseline()">🎯 Set Clean Panel Baseline</button>
+                    <button class="btn btn-warning" onclick="checkCleaning()">🧼 Check Cleaning Status</button>
+                </div>
+
+                <div id="cleaningStatus" class="info-section" style="display: none;">
+                    <h3>Cleaning Analysis</h3>
+                    <p id="cleaningDetails">Analyzing...</p>
+                </div>
+            </div>
+
+            <!-- Controls Tab -->
+            <div id="control" class="tab-content">
+                <h2 style="margin-bottom: 20px;">🎛️ System Controls</h2>
+
+                <div class="info-section">
+                    <h3>Battery Management</h3>
+                    <p>Manually switch between battery sources or enable automatic mode.</p>
+                    <div class="controls">
+                        <button class="btn btn-success" onclick="sendCommand('BATT1')">🔋 Battery 1</button>
+                        <button class="btn btn-success" onclick="sendCommand('BATT2')">🔋 Battery 2</button>
+                        <button class="btn btn-primary" onclick="sendCommand('AUTO')">🔄 Auto Mode</button>
+                    </div>
+                </div>
+
+                <div class="info-section">
+                    <h3>Calibration</h3>
+                    <p>Set baseline readings when solar panel is freshly cleaned.</p>
+                    <div class="controls">
+                        <button class="btn btn-warning" onclick="sendCommand('BASELINE')">🎯 Set Baseline</button>
+                    </div>
+                </div>
+
+                <div class="info-section">
+                    <h3>Power Saving Mode</h3>
+                    <p><strong>Automatic Energy Saving</strong></p>
+                    <ul>
+                        <li>Activates when light intensity drops below threshold for 10 minutes</li>
+                        <li>Stops servo movement to conserve battery power</li>
+                        <li>Continues sensor monitoring at reduced frequency</li>
+                        <li>Automatically resumes tracking when sunlight returns</li>
+                    </ul>
+                    <div class="alert info">
+                        <span>ℹ️</span>
+                        <span>Power save mode is fully automatic. Current status: <strong id="powerStatus">Active</strong></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- About Tab -->
+            <div id="about" class="tab-content">
+                <h2 style="margin-bottom: 20px;">ℹ️ About Solar Tracker System</h2>
+
+                <div class="info-section">
+                    <h3>System Overview</h3>
+                    <p>This dual-axis solar tracking system optimizes solar panel orientation to maximize energy harvesting throughout the day. The system uses multiple sensors and intelligent algorithms to track the sun's position and monitor panel performance.</p>
+                </div>
+
+                <!-- Block Diagram -->
+                <div class="info-section">
+                    <h3>Block Diagram</h3>
+                    <div class="diagram-container">
+                        <img src="images/block-diagram.png" alt="System Block Diagram" class="diagram-img">
+                    </div>
+                </div>
+
+                <!-- Circuit Diagram -->
+                <div class="info-section">
+                    <h3>Circuit Diagram</h3>
+                    <div class="diagram-container">
+                        <img src="images/circuit-diagram.png" alt="Circuit Diagram" class="diagram-img">
+                    </div>
+                </div>
+
+                <div class="info-section">
+                    <h3>Hardware Components</h3>
+                    <ul>
+                        <li><strong>Arduino Uno:</strong> Main controller for sensors and servos</li>
+                        <li><strong>ESP8266 (ESP-01):</strong> WiFi connectivity and cloud communication</li>
+                        <li><strong>4× LDR Sensors:</strong> Light direction detection (West, East, Left, Right)</li>
+                        <li><strong>BH1750:</strong> Digital light intensity sensor (calibrated lux readings)</li>
+                        <li><strong>INA219:</strong> Solar panel voltage and current monitoring</li>
+                        <li><strong>2× Servos:</strong> Dual-axis panel positioning (SG90 or MG996R)</li>
+                        <li><strong>Relay Module (2-channel):</strong> Battery switching control</li>
+                        <li><strong>2× 18650 Lithium Batteries:</strong> Energy storage with automatic switching</li>
+                        <li><strong>TP4056:</strong> Battery charging module</li>
+                        <li><strong>AMS1117:</strong> 3.3V voltage regulator for ESP8266</li>
+                        <li><strong>Buck Converter:</strong> 9V to 5V for servo power</li>
+                    </ul>
+                </div>
+
+                <div class="info-section">
+                    <h3>Key Features</h3>
+                    <ul>
+                        <li>✅ Real-time dual-axis sun tracking</li>
+                        <li>✅ Cloud-based monitoring via ThingSpeak</li>
+                        <li>✅ Smart cleaning alerts using dual-sensor validation</li>
+                        <li>✅ Automatic power saving during night/cloudy periods</li>
+                        <li>✅ Remote battery management</li>
+                        <li>✅ Comprehensive data logging and visualization</li>
+                        <li>✅ Cross-platform web dashboard (mobile & desktop)</li>
+                        <li>✅ Real-time alerts and notifications</li>
+                    </ul>
+                </div>
+
+                <div class="info-section">
+                    <h3>Data Collection & Monitoring</h3>
+                    <p><strong>Sensors read every 500ms, data sent to cloud every 20 seconds:</strong></p>
+                    <ul>
+                        <li>Light intensity (BH1750 digital sensor in lux)</li>
+                        <li>Horizontal and vertical tracking errors</li>
+                        <li>Individual LDR readings for diagnostics</li>
+                        <li>Servo positions (X and Y axis in degrees)</li>
+                        <li>Solar panel voltage, current, and calculated power</li>
+                        <li>Battery voltage monitoring</li>
+                        <li>System mode (Active/Power Save)</li>
+                    </ul>
+                </div>
+
+                <div class="info-section">
+                    <h3>Power Management</h3>
+                    <p><strong>Intelligent Energy Conservation:</strong></p>
+                    <ul>
+                        <li>Dual battery system with automatic relay switching</li>
+                        <li>Solar panel charging via TP4056 module</li>
+                        <li>Buck converter for stable servo power supply</li>
+                        <li>10-minute threshold before entering power save mode</li>
+                        <li>Automatic wake-up when sunlight returns</li>
+                    </ul>
+                </div>
+
+                <div class="info-section">
+                    <h3>Technology Stack</h3>
+                    <p><strong>Hardware:</strong> Arduino Uno, ESP8266, I2C Sensors, PWM Servos</p>
+                    <p><strong>Backend:</strong> ThingSpeak IoT Platform, REST API</p>
+                    <p><strong>Frontend:</strong> HTML5, CSS3, JavaScript (Vanilla)</p>
+                    <p><strong>Visualization:</strong> Chart.js for real-time graphs</p>
+                    <p><strong>Communication:</strong> UART (Arduino-ESP), WiFi (ESP-Cloud)</p>
+                </div>
+
+                <div class="info-section">
+                    <h3>Project Team</h3>
+                    <p>Developed as an advanced IoT solar energy harvesting and monitoring system.</p>
+                    <p><strong>GitHub Repository:</strong> <a href="#" target="_blank" id="githubLink">Add your repo link</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
 </body>
 </html>
