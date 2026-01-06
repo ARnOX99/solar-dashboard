@@ -93,7 +93,7 @@
                     </div>
 
                     <div class="reading-card">
-                        <div class="reading-label">💡 Solar Power</div>
+                        <div class="reading-label">💡 Solar Power (Calculated)</div>
                         <div class="reading-value" id="solarP">0.00</div>
                         <div class="reading-unit">mW</div>
                     </div>
@@ -128,29 +128,67 @@
             <div id="history" class="tab-content">
                 <h2 style="margin-bottom: 20px;">📈 Historical Trends (ThingSpeak)</h2>
 
-                <div class="chart-container">
-                    <div class="chart-title">Light Intensity Over Time</div>
-                    <canvas id="chartIntensity"></canvas>
-                </div>
+                <!-- Compact 2-column grid for individual graphs -->
+                <div class="charts-grid">
+                    <!-- Light Intensity Chart -->
+                    <div class="chart-container-compact">
+                        <div class="chart-title-compact">☀️ Light Intensity</div>
+                        <canvas id="chartIntensity"></canvas>
+                    </div>
 
-                <div class="chart-container">
-                    <div class="chart-title">Tracking Errors</div>
-                    <canvas id="chartErrors"></canvas>
-                </div>
+                    <!-- Horizontal Error Chart -->
+                    <div class="chart-container-compact">
+                        <div class="chart-title-compact">↔️ Horizontal Error</div>
+                        <canvas id="chartHError"></canvas>
+                    </div>
 
-                <div class="chart-container">
-                    <div class="chart-title">Servo Positions</div>
-                    <canvas id="chartServos"></canvas>
-                </div>
+                    <!-- Vertical Error Chart -->
+                    <div class="chart-container-compact">
+                        <div class="chart-title-compact">↕️ Vertical Error</div>
+                        <canvas id="chartVError"></canvas>
+                    </div>
 
-                <div class="chart-container">
-                    <div class="chart-title">Solar Panel Performance</div>
-                    <canvas id="chartSolar"></canvas>
-                </div>
+                    <!-- Servo X Chart -->
+                    <div class="chart-container-compact">
+                        <div class="chart-title-compact">🔄 Servo X Position</div>
+                        <canvas id="chartServoX"></canvas>
+                    </div>
 
-                <div class="chart-container">
-                    <div class="chart-title">Battery Voltage</div>
-                    <canvas id="chartBattery"></canvas>
+                    <!-- Servo Y Chart -->
+                    <div class="chart-container-compact">
+                        <div class="chart-title-compact">🔄 Servo Y Position</div>
+                        <canvas id="chartServoY"></canvas>
+                    </div>
+
+                    <!-- Solar Voltage Chart -->
+                    <div class="chart-container-compact">
+                        <div class="chart-title-compact">⚡ Solar Voltage</div>
+                        <canvas id="chartVoltage"></canvas>
+                    </div>
+
+                    <!-- Solar Current Chart -->
+                    <div class="chart-container-compact">
+                        <div class="chart-title-compact">⚡ Solar Current</div>
+                        <canvas id="chartCurrent"></canvas>
+                    </div>
+
+                    <!-- Battery Voltage Chart -->
+                    <div class="chart-container-compact">
+                        <div class="chart-title-compact">🔋 Battery Voltage</div>
+                        <canvas id="chartBattery"></canvas>
+                    </div>
+
+                    <!-- Solar Power Chart (Calculated) -->
+                    <div class="chart-container-compact">
+                        <div class="chart-title-compact">💡 Solar Power (Calculated)</div>
+                        <canvas id="chartPower"></canvas>
+                    </div>
+
+                    <!-- Average LDR Chart -->
+                    <div class="chart-container-compact">
+                        <div class="chart-title-compact">📡 Average LDR</div>
+                        <canvas id="chartAvgLDR"></canvas>
+                    </div>
                 </div>
             </div>
 
@@ -290,7 +328,7 @@
                         <li>Horizontal and vertical tracking errors</li>
                         <li>Individual LDR readings for diagnostics</li>
                         <li>Servo positions (X and Y axis in degrees)</li>
-                        <li>Solar panel voltage, current, and calculated power</li>
+                        <li>Solar panel voltage and current (Power calculated on website)</li>
                         <li>Battery voltage monitoring</li>
                         <li>System mode (Active/Power Save)</li>
                     </ul>
