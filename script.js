@@ -1,6 +1,6 @@
 // ============ CONFIGURATION ============
-const THINGSPEAK_CHANNEL_ID = 'YOUR_CHANNEL_ID';  // CHANGE THIS
-const THINGSPEAK_READ_KEY = 'YOUR_READ_API_KEY';  // CHANGE THIS
+const THINGSPEAK_CHANNEL_ID = '3209440';  // CHANGE THIS
+const THINGSPEAK_READ_KEY = 'RAP1FJI6NKHKOEI2';  // CHANGE THIS
 const UPDATE_INTERVAL = 20000; // 20 seconds
 
 // ============ GLOBAL VARIABLES ============
@@ -609,3 +609,4 @@ window.onerror = function(msg, url, lineNo, columnNo, error) {
     console.error('Error: ', msg, '\nURL: ', url, '\nLine: ', lineNo, '\nColumn: ', columnNo, '\nError object: ', error);
     return false;
 };
+
