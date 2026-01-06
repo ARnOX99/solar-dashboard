@@ -24,7 +24,14 @@ function switchTab(tabName) {
 
     // Show selected tab
     document.getElementById(tabName).classList.add('active');
-    event.target.classList.add('active');
+
+    // Highlight active tab button
+    const tabs = document.querySelectorAll('.tab');
+    tabs.forEach(tab => {
+        if (tab.textContent.includes(getTabIcon(tabName))) {
+            tab.classList.add('active');
+        }
+    });
 
     // Load data for specific tabs
     if (tabName === 'history') {
@@ -32,18 +39,35 @@ function switchTab(tabName) {
     }
 }
 
+// Helper function to match tab icons
+function getTabIcon(tabName) {
+    const icons = {
+        'live': '📊',
+        'history': '📈',
+        'alerts': '🔔',
+        'control': '🎛️',
+        'about': 'ℹ️'
+    };
+    return icons[tabName] || '';
+}
+
 // ============ FETCH LIVE DATA FROM THINGSPEAK ============
 async function fetchLiveData() {
     try {
         const url = `https://api.thingspeak.com/channels/${THINGSPEAK_CHANNEL_ID}/feeds/last.json?api_key=${THINGSPEAK_READ_KEY}`;
         const response = await fetch(url);
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
         const data = await response.json();
 
         if (data && data.created_at) {
             updateLiveReadings(data);
             checkAlerts(data);
         } else {
-            console.error('No data received from ThingSpeak');
+            console.warn('No data received from ThingSpeak');
         }
     } catch (error) {
         console.error('Error fetching data:', error);
@@ -190,16 +214,39 @@ async function loadHistoricalData() {
     try {
         const url = `https://api.thingspeak.com/channels/${THINGSPEAK_CHANNEL_ID}/feeds.json?api_key=${THINGSPEAK_READ_KEY}&results=100`;
         const response = await fetch(url);
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
         const data = await response.json();
 
         if (data && data.feeds && data.feeds.length > 0) {
             createCharts(data.feeds);
         } else {
-            console.error('No historical data available');
+            console.warn('No historical data available');
+            // Show message in charts
+            showNoDataMessage();
         }
     } catch (error) {
         console.error('Error loading historical data:', error);
+        showNoDataMessage();
     }
+}
+
+// Show message when no data available
+function showNoDataMessage() {
+    const chartContainers = document.querySelectorAll('.chart-container');
+    chartContainers.forEach(container => {
+        const canvas = container.querySelector('canvas');
+        if (canvas) {
+            const ctx = canvas.getContext('2d');
+            ctx.font = '16px Arial';
+            ctx.fillStyle = '#64748b';
+            ctx.textAlign = 'center';
+            ctx.fillText('No data available. Please check ThingSpeak configuration.', canvas.width / 2, canvas.height / 2);
+        }
+    });
 }
 
 // ============ CREATE CHARTS ============
@@ -371,11 +418,8 @@ function createChart(canvasId, data, dualAxis = false) {
 // ============ SEND COMMAND TO ARDUINO (via ThingSpeak TalkBack or Server) ============
 function sendCommand(command) {
     // Display confirmation
-    const confirmMsg = `Send command "${command}" to Arduino?
-
-` +
-                      `Note: This requires ThingSpeak TalkBack API or a server-side relay.
-` +
+    const confirmMsg = `Send command "${command}" to Arduino?\n\n` +
+                      `Note: This requires ThingSpeak TalkBack API or a server-side relay.\n` +
                       `For now, this is a demonstration.`;
 
     if (confirm(confirmMsg)) {
@@ -434,24 +478,17 @@ function setBaseline() {
     // Send BASELINE command to Arduino
     sendCommand('BASELINE');
 
-    alert('✅ Baseline calibration set successfully!
-
-' +
-          `BH1750 Lux: ${baselineData.bhLux.toFixed(1)}
-` +
-          `Avg LDR: ${baselineData.avgLDR}
-` +
-          `Voltage: ${baselineData.voltage.toFixed(2)} V
-` +
+    alert('✅ Baseline calibration set successfully!\n\n' +
+          `BH1750 Lux: ${baselineData.bhLux.toFixed(1)}\n` +
+          `Avg LDR: ${baselineData.avgLDR}\n` +
+          `Voltage: ${baselineData.voltage.toFixed(2)} V\n` +
           `Current: ${baselineData.current.toFixed(2)} mA`);
 }
 
 // ============ CHECK CLEANING STATUS ============
 function checkCleaning() {
     if (!baselineData.current || baselineData.current === 0) {
-        alert('⚠️ No baseline set!
-
-Please set a clean panel baseline first.');
+        alert('⚠️ No baseline set!\n\nPlease set a clean panel baseline first.');
         return;
     }
 
