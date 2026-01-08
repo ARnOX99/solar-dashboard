@@ -11,6 +11,11 @@ let baselineData = {
     bhLux: 0,
     avgLDR: 0
 };
+let historicalData = [];  // Store all fetched data
+let currentPage = 1;
+let rowsPerPage = 50;
+let sortColumn = -1;
+let sortAscending = true;
 
 // ============ TAB SWITCHING ============
 function switchTab(tabName) {
@@ -36,6 +41,8 @@ function switchTab(tabName) {
     // Load data for specific tabs
     if (tabName === 'history') {
         loadHistoricalData();
+    } else if (tabName === 'datatable') {
+        loadDataTable();
     }
 }
 
@@ -44,6 +51,7 @@ function getTabIcon(tabName) {
     const icons = {
         'live': '📊',
         'history': '📈',
+        'datatable': '📋',
         'alerts': '🔔',
         'control': '🎛️',
         'about': 'ℹ️'
@@ -78,16 +86,6 @@ async function fetchLiveData() {
 
 // ============ UPDATE LIVE READINGS ============
 function updateLiveReadings(data) {
-    // ThingSpeak Fields:
-    // Field1: BH1750 Lux
-    // Field2: Horizontal Error
-    // Field3: Vertical Error
-    // Field4: Servo X
-    // Field5: Servo Y
-    // Field6: Solar Voltage
-    // Field7: Solar Current
-    // Field8: Battery Voltage
-
     document.getElementById('bhLux').textContent = parseFloat(data.field1 || 0).toFixed(1);
     document.getElementById('hError').textContent = parseInt(data.field2 || 0);
     document.getElementById('vError').textContent = parseInt(data.field3 || 0);
@@ -97,13 +95,11 @@ function updateLiveReadings(data) {
     document.getElementById('solarI').textContent = parseFloat(data.field7 || 0).toFixed(2);
     document.getElementById('battV').textContent = parseFloat(data.field8 || 0).toFixed(2);
 
-    // *** CALCULATE POWER: P = V × I ***
     const voltage = parseFloat(data.field6 || 0);
     const current = parseFloat(data.field7 || 0);
     const power = (voltage * current).toFixed(2);
     document.getElementById('solarP').textContent = power;
 
-    // Parse status field for additional data (LDRs and Mode)
     if (data.status) {
         const statusParts = data.status.split(',');
         statusParts.forEach(part => {
@@ -118,14 +114,12 @@ function updateLiveReadings(data) {
                 document.getElementById('ldrL').textContent = ldrs[2] || '0';
                 document.getElementById('ldrR').textContent = ldrs[3] || '0';
 
-                // Calculate average
                 const avg = Math.round((parseInt(ldrs[0]||0) + parseInt(ldrs[1]||0) + parseInt(ldrs[2]||0) + parseInt(ldrs[3]||0)) / 4);
                 document.getElementById('avgLDR').textContent = avg;
             }
         });
     }
 
-    // Update timestamp
     const now = new Date();
     document.getElementById('lastUpdate').textContent = `Last updated: ${now.toLocaleTimeString()}`;
 }
@@ -146,46 +140,280 @@ function updateSystemStatus(mode) {
     }
 }
 
-// ============ CHECK ALERTS (SMART CLEANING DETECTION) ============
+// ============ LOAD DATA TABLE ============
+async function loadDataTable() {
+    const range = document.getElementById('dataRange').value;
+    const tableBody = document.getElementById('dataTableBody');
+
+    // Show loading
+    tableBody.innerHTML = `
+        <tr>
+            <td colspan="11" style="text-align: center; padding: 40px;">
+                <div class="spinner"></div>
+                <p>Loading ${range} readings from ThingSpeak...</p>
+            </td>
+        </tr>
+    `;
+
+    try {
+        const url = `https://api.thingspeak.com/channels/${THINGSPEAK_CHANNEL_ID}/feeds.json?api_key=${THINGSPEAK_READ_KEY}&results=${range}`;
+        const response = await fetch(url);
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (data && data.feeds && data.feeds.length > 0) {
+            historicalData = data.feeds;
+            displayDataTable();
+            updateStatistics();
+        } else {
+            tableBody.innerHTML = '<tr><td colspan="11" style="text-align: center; padding: 40px;">No data available</td></tr>';
+        }
+    } catch (error) {
+        console.error('Error loading data table:', error);
+        tableBody.innerHTML = '<tr><td colspan="11" style="text-align: center; padding: 40px; color: #ef4444;">Error loading data. Please check ThingSpeak configuration.</td></tr>';
+    }
+}
+
+// ============ DISPLAY DATA TABLE ============
+function displayDataTable() {
+    const tableBody = document.getElementById('dataTableBody');
+    const start = (currentPage - 1) * rowsPerPage;
+    const end = start + rowsPerPage;
+    const pageData = historicalData.slice(start, end);
+
+    let html = '';
+    pageData.forEach((row, index) => {
+        const actualIndex = start + index + 1;
+        const timestamp = new Date(row.created_at).toLocaleString();
+        const voltage = parseFloat(row.field6 || 0);
+        const current = parseFloat(row.field7 || 0);
+        const power = (voltage * current).toFixed(2);
+
+        // Color code power values
+        let powerClass = '';
+        if (power > 1000) powerClass = 'high-power';
+        else if (power > 500) powerClass = 'medium-power';
+        else if (power > 0) powerClass = 'low-power';
+
+        html += `
+            <tr>
+                <td>${actualIndex}</td>
+                <td>${timestamp}</td>
+                <td>${parseFloat(row.field1 || 0).toFixed(1)}</td>
+                <td>${parseInt(row.field2 || 0)}</td>
+                <td>${parseInt(row.field3 || 0)}</td>
+                <td>${parseInt(row.field4 || 90)}</td>
+                <td>${parseInt(row.field5 || 90)}</td>
+                <td>${voltage.toFixed(2)}</td>
+                <td>${current.toFixed(2)}</td>
+                <td class="${powerClass}">${power}</td>
+                <td>${parseFloat(row.field8 || 0).toFixed(2)}</td>
+            </tr>
+        `;
+    });
+
+    tableBody.innerHTML = html;
+
+    // Update pagination
+    const totalPages = Math.ceil(historicalData.length / rowsPerPage);
+    document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages}`;
+    document.getElementById('rowCount').textContent = historicalData.length;
+
+    // Update button states
+    const prevBtn = document.querySelector('.pagination button:first-child');
+    const nextBtn = document.querySelector('.pagination button:last-child');
+    prevBtn.disabled = currentPage === 1;
+    nextBtn.disabled = currentPage === totalPages;
+}
+
+// ============ UPDATE STATISTICS ============
+function updateStatistics() {
+    let totalPower = 0;
+    let maxPower = 0;
+
+    historicalData.forEach(row => {
+        const voltage = parseFloat(row.field6 || 0);
+        const current = parseFloat(row.field7 || 0);
+        const power = voltage * current;
+        totalPower += power;
+        if (power > maxPower) maxPower = power;
+    });
+
+    const avgPower = totalPower / historicalData.length;
+    const totalEnergy = (totalPower * 20) / 3600000; // 20 sec intervals, convert to Wh
+
+    document.getElementById('totalReadings').textContent = historicalData.length;
+    document.getElementById('avgPower').textContent = avgPower.toFixed(2);
+    document.getElementById('totalEnergy').textContent = totalEnergy.toFixed(2);
+    document.getElementById('peakPower').textContent = maxPower.toFixed(2);
+}
+
+// ============ PAGINATION ============
+function changePage(direction) {
+    const totalPages = Math.ceil(historicalData.length / rowsPerPage);
+    currentPage += direction;
+    if (currentPage < 1) currentPage = 1;
+    if (currentPage > totalPages) currentPage = totalPages;
+    displayDataTable();
+}
+
+// ============ SEARCH/FILTER TABLE ============
+function filterTable() {
+    const searchTerm = document.getElementById('searchBox').value.toLowerCase();
+    const rows = document.querySelectorAll('#dataTableBody tr');
+
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(searchTerm) ? '' : 'none';
+    });
+}
+
+// ============ SORT TABLE ============
+function sortTable(columnIndex) {
+    if (sortColumn === columnIndex) {
+        sortAscending = !sortAscending;
+    } else {
+        sortColumn = columnIndex;
+        sortAscending = true;
+    }
+
+    historicalData.sort((a, b) => {
+        let aVal, bVal;
+
+        switch(columnIndex) {
+            case 1: // Timestamp
+                aVal = new Date(a.created_at);
+                bVal = new Date(b.created_at);
+                break;
+            case 2: // Light
+                aVal = parseFloat(a.field1 || 0);
+                bVal = parseFloat(b.field1 || 0);
+                break;
+            case 3: // H Error
+                aVal = parseInt(a.field2 || 0);
+                bVal = parseInt(b.field2 || 0);
+                break;
+            case 4: // V Error
+                aVal = parseInt(a.field3 || 0);
+                bVal = parseInt(b.field3 || 0);
+                break;
+            case 5: // Servo X
+                aVal = parseInt(a.field4 || 90);
+                bVal = parseInt(b.field4 || 90);
+                break;
+            case 6: // Servo Y
+                aVal = parseInt(a.field5 || 90);
+                bVal = parseInt(b.field5 || 90);
+                break;
+            case 7: // Voltage
+                aVal = parseFloat(a.field6 || 0);
+                bVal = parseFloat(b.field6 || 0);
+                break;
+            case 8: // Current
+                aVal = parseFloat(a.field7 || 0);
+                bVal = parseFloat(b.field7 || 0);
+                break;
+            case 9: // Power
+                aVal = parseFloat(a.field6 || 0) * parseFloat(a.field7 || 0);
+                bVal = parseFloat(b.field6 || 0) * parseFloat(b.field7 || 0);
+                break;
+            case 10: // Battery
+                aVal = parseFloat(a.field8 || 0);
+                bVal = parseFloat(b.field8 || 0);
+                break;
+            default:
+                return 0;
+        }
+
+        if (aVal < bVal) return sortAscending ? -1 : 1;
+        if (aVal > bVal) return sortAscending ? 1 : -1;
+        return 0;
+    });
+
+    currentPage = 1;
+    displayDataTable();
+}
+
+// ============ EXPORT TO CSV ============
+function exportToCSV() {
+    let csv = 'Timestamp,Light Intensity (lux),H Error,V Error,Servo X (deg),Servo Y (deg),Voltage (V),Current (mA),Power (mW),Battery (V)\n';
+
+    historicalData.forEach(row => {
+        const timestamp = new Date(row.created_at).toISOString();
+        const voltage = parseFloat(row.field6 || 0);
+        const current = parseFloat(row.field7 || 0);
+        const power = (voltage * current).toFixed(2);
+
+        csv += `${timestamp},${row.field1},${row.field2},${row.field3},${row.field4},${row.field5},${row.field6},${row.field7},${power},${row.field8}\n`;
+    });
+
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `solar_tracker_data_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+}
+
+// ============ EXPORT TO EXCEL-COMPATIBLE CSV ============
+function exportToExcel() {
+    // Excel-friendly CSV with UTF-8 BOM
+    let csv = '\ufeffTimestamp,Light Intensity (lux),H Error,V Error,Servo X (deg),Servo Y (deg),Voltage (V),Current (mA),Power (mW),Battery (V)\n';
+
+    historicalData.forEach(row => {
+        const timestamp = new Date(row.created_at).toLocaleString();
+        const voltage = parseFloat(row.field6 || 0);
+        const current = parseFloat(row.field7 || 0);
+        const power = (voltage * current).toFixed(2);
+
+        csv += `"${timestamp}",${row.field1},${row.field2},${row.field3},${row.field4},${row.field5},${row.field6},${row.field7},${power},${row.field8}\n`;
+    });
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `solar_tracker_data_excel_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+
+    alert('✅ Data exported! Open in Excel for charts and analysis.');
+}
+
+// ============ CHECK ALERTS ============
 function checkAlerts(data) {
     if (!baselineData.current || baselineData.current === 0) {
-        return; // No baseline set yet
+        return;
     }
 
     const currentLux = parseFloat(data.field1 || 0);
     const currentCurrent = parseFloat(data.field7 || 0);
 
-    // Only check if there's sufficient light
     if (currentLux < 100) {
-        return; // Too dark to evaluate cleaning status
+        return;
     }
 
-    // Calculate expected current based on baseline ratio
     const expectedCurrent = (currentLux / baselineData.bhLux) * baselineData.current;
-
-    // Check if actual current is significantly lower than expected
-    const threshold = 0.7; // 70% of expected (30% drop triggers alert)
+    const threshold = 0.7;
     const performanceRatio = currentCurrent / expectedCurrent;
 
     if (performanceRatio < threshold) {
         showCleaningAlert(currentCurrent, expectedCurrent, performanceRatio);
     } else {
-        // Remove cleaning alert if performance is good
         removeCleaningAlert();
     }
 }
 
-// ============ SHOW CLEANING ALERT ============
 function showCleaningAlert(actual, expected, ratio) {
     const alertsContainer = document.getElementById('alertsContainer');
-
-    // Check if alert already exists
-    if (document.getElementById('cleaningAlert')) {
-        return;
-    }
+    if (document.getElementById('cleaningAlert')) return;
 
     const performanceDrop = ((1 - ratio) * 100).toFixed(1);
-
     const alertHTML = `
         <div class="alert danger" id="cleaningAlert">
             <span style="font-size: 1.5em;">🧼</span>
@@ -196,67 +424,40 @@ function showCleaningAlert(actual, expected, ratio) {
             </div>
         </div>
     `;
-
-    // Insert at the beginning
     alertsContainer.insertAdjacentHTML('afterbegin', alertHTML);
 }
 
-// ============ REMOVE CLEANING ALERT ============
 function removeCleaningAlert() {
     const alert = document.getElementById('cleaningAlert');
-    if (alert) {
-        alert.remove();
-    }
+    if (alert) alert.remove();
 }
 
-// ============ LOAD HISTORICAL DATA ============
+// ============ LOAD HISTORICAL DATA FOR CHARTS ============
 async function loadHistoricalData() {
     try {
         const url = `https://api.thingspeak.com/channels/${THINGSPEAK_CHANNEL_ID}/feeds.json?api_key=${THINGSPEAK_READ_KEY}&results=100`;
         const response = await fetch(url);
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();
 
         if (data && data.feeds && data.feeds.length > 0) {
             createCharts(data.feeds);
         } else {
             console.warn('No historical data available');
-            showNoDataMessage();
         }
     } catch (error) {
         console.error('Error loading historical data:', error);
-        showNoDataMessage();
     }
-}
-
-// Show message when no data available
-function showNoDataMessage() {
-    const chartContainers = document.querySelectorAll('.chart-container-compact');
-    chartContainers.forEach(container => {
-        const canvas = container.querySelector('canvas');
-        if (canvas) {
-            const ctx = canvas.getContext('2d');
-            ctx.font = '14px Arial';
-            ctx.fillStyle = '#64748b';
-            ctx.textAlign = 'center';
-            ctx.fillText('No data available', canvas.width / 2, canvas.height / 2);
-        }
-    });
 }
 
 // ============ CREATE INDIVIDUAL CHARTS ============
 function createCharts(feeds) {
-    // Extract timestamps
     const timestamps = feeds.map(f => {
         const date = new Date(f.created_at);
         return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     });
 
-    // 1. Light Intensity (BH1750)
     createCompactChart('chartIntensity', {
         labels: timestamps,
         datasets: [{
@@ -269,7 +470,6 @@ function createCharts(feeds) {
         }]
     });
 
-    // 2. Horizontal Error
     createCompactChart('chartHError', {
         labels: timestamps,
         datasets: [{
@@ -282,7 +482,6 @@ function createCharts(feeds) {
         }]
     });
 
-    // 3. Vertical Error
     createCompactChart('chartVError', {
         labels: timestamps,
         datasets: [{
@@ -295,7 +494,6 @@ function createCharts(feeds) {
         }]
     });
 
-    // 4. Servo X Position
     createCompactChart('chartServoX', {
         labels: timestamps,
         datasets: [{
@@ -308,7 +506,6 @@ function createCharts(feeds) {
         }]
     });
 
-    // 5. Servo Y Position
     createCompactChart('chartServoY', {
         labels: timestamps,
         datasets: [{
@@ -321,7 +518,6 @@ function createCharts(feeds) {
         }]
     });
 
-    // 6. Solar Voltage
     createCompactChart('chartVoltage', {
         labels: timestamps,
         datasets: [{
@@ -334,7 +530,6 @@ function createCharts(feeds) {
         }]
     });
 
-    // 7. Solar Current
     createCompactChart('chartCurrent', {
         labels: timestamps,
         datasets: [{
@@ -347,7 +542,6 @@ function createCharts(feeds) {
         }]
     });
 
-    // 8. Battery Voltage
     createCompactChart('chartBattery', {
         labels: timestamps,
         datasets: [{
@@ -360,7 +554,6 @@ function createCharts(feeds) {
         }]
     });
 
-    // *** 9. SOLAR POWER (CALCULATED: P = V × I) ***
     const powerData = feeds.map(f => {
         const voltage = parseFloat(f.field6 || 0);
         const current = parseFloat(f.field7 || 0);
@@ -379,7 +572,6 @@ function createCharts(feeds) {
         }]
     });
 
-    // 10. Average LDR (from status field if available)
     const avgLDRData = feeds.map(f => {
         if (f.status && f.status.includes('LDRs:')) {
             const ldrPart = f.status.split(',').find(p => p.startsWith('LDRs:'));
@@ -404,115 +596,59 @@ function createCharts(feeds) {
     });
 }
 
-// ============ CREATE COMPACT CHART HELPER ============
 function createCompactChart(canvasId, data) {
     const ctx = document.getElementById(canvasId);
-    if (!ctx) {
-        console.error(`Canvas element ${canvasId} not found`);
-        return;
-    }
+    if (!ctx) return;
 
-    // Destroy existing chart if it exists
     if (charts[canvasId]) {
         charts[canvasId].destroy();
     }
 
-    const options = {
-        responsive: true,
-        maintainAspectRatio: true,
-        aspectRatio: 2,
-        plugins: {
-            legend: {
-                display: false  // Hide legend for compact view
-            },
-            tooltip: {
-                mode: 'index',
-                intersect: false,
-                backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                padding: 10,
-                titleFont: {
-                    size: 12
-                },
-                bodyFont: {
-                    size: 11
-                }
-            }
-        },
-        scales: {
-            y: {
-                beginAtZero: true,
-                grid: {
-                    color: 'rgba(0, 0, 0, 0.05)'
-                },
-                ticks: {
-                    font: {
-                        size: 10
-                    }
-                }
-            },
-            x: {
-                grid: {
-                    display: false
-                },
-                ticks: {
-                    font: {
-                        size: 9
-                    },
-                    maxRotation: 45,
-                    minRotation: 45
-                }
-            }
-        }
-    };
-
     charts[canvasId] = new Chart(ctx, {
         type: 'line',
         data: data,
-        options: options
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            aspectRatio: 2,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false,
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    padding: 10
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: 'rgba(0, 0, 0, 0.05)' },
+                    ticks: { font: { size: 10 } }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { font: { size: 9 }, maxRotation: 45, minRotation: 45 }
+                }
+            }
+        }
     });
 }
 
-// ============ SEND COMMAND TO ARDUINO (via ThingSpeak TalkBack or Server) ============
+// ============ COMMANDS & BASELINE ============
 function sendCommand(command) {
-    // Display confirmation
-    const confirmMsg = `Send command "${command}" to Arduino?\n\n` +
-                      `Note: This requires ThingSpeak TalkBack API or a server-side relay.\n` +
-                      `For now, this is a demonstration.`;
-
-    if (confirm(confirmMsg)) {
+    if (confirm(`Send command "${command}" to Arduino?`)) {
         console.log(`Command sent: ${command}`);
-
-        // TODO: Implement actual command sending via:
-        // 1. ThingSpeak TalkBack API
-        // 2. Custom server endpoint
-        // 3. MQTT broker
-
-        // Example ThingSpeak TalkBack implementation:
-        /*
-        const talkbackID = 'YOUR_TALKBACK_ID';
-        const talkbackKey = 'YOUR_TALKBACK_KEY';
-        fetch(`https://api.thingspeak.com/talkbacks/${talkbackID}/commands.json`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                api_key: talkbackKey, 
-                command_string: command 
-            })
-        });
-        */
-
         alert(`✅ Command "${command}" queued for transmission.`);
     }
 }
 
-// ============ SET BASELINE CALIBRATION ============
 function setBaseline() {
     const currentLux = parseFloat(document.getElementById('bhLux').textContent);
     const currentAvgLDR = parseInt(document.getElementById('avgLDR').textContent);
     const currentVoltage = parseFloat(document.getElementById('solarV').textContent);
     const currentCurrent = parseFloat(document.getElementById('solarI').textContent);
 
-    // Validate data
     if (currentLux < 100) {
         alert('⚠️ Light intensity too low! Please set baseline in bright sunlight.');
         return;
@@ -523,29 +659,20 @@ function setBaseline() {
         return;
     }
 
-    // Store baseline
     baselineData.bhLux = currentLux;
     baselineData.avgLDR = currentAvgLDR;
     baselineData.voltage = currentVoltage;
     baselineData.current = currentCurrent;
 
-    // Save to localStorage
     localStorage.setItem('solarTrackerBaseline', JSON.stringify(baselineData));
-
-    // Send BASELINE command to Arduino
     sendCommand('BASELINE');
 
-    alert('✅ Baseline calibration set successfully!\n\n' +
-          `BH1750 Lux: ${baselineData.bhLux.toFixed(1)}\n` +
-          `Avg LDR: ${baselineData.avgLDR}\n` +
-          `Voltage: ${baselineData.voltage.toFixed(2)} V\n` +
-          `Current: ${baselineData.current.toFixed(2)} mA`);
+    alert('✅ Baseline calibration set successfully!');
 }
 
-// ============ CHECK CLEANING STATUS ============
 function checkCleaning() {
     if (!baselineData.current || baselineData.current === 0) {
-        alert('⚠️ No baseline set!\n\nPlease set a clean panel baseline first.');
+        alert('⚠️ No baseline set! Please set a clean panel baseline first.');
         return;
     }
 
@@ -553,117 +680,40 @@ function checkCleaning() {
     const currentAvgLDR = parseInt(document.getElementById('avgLDR').textContent);
     const currentCurrent = parseFloat(document.getElementById('solarI').textContent);
 
-    // Calculate expected current from both sensors
     const expectedFromBH = (currentLux / baselineData.bhLux) * baselineData.current;
     const expectedFromLDR = (currentAvgLDR / baselineData.avgLDR) * baselineData.current;
     const expectedCurrent = (expectedFromBH + expectedFromLDR) / 2;
-
-    // Calculate performance
     const performance = (currentCurrent / expectedCurrent) * 100;
 
-    // Display results
     const statusDiv = document.getElementById('cleaningStatus');
     const detailsDiv = document.getElementById('cleaningDetails');
-
     statusDiv.style.display = 'block';
 
-    let statusHTML = `
-        <strong>📊 Current Analysis:</strong><br><br>
-        <table style="width: 100%; border-collapse: collapse;">
-            <tr style="background: white;">
-                <td style="padding: 10px;"><strong>Light Intensity (BH1750):</strong></td>
-                <td style="padding: 10px;">${currentLux.toFixed(1)} lux (Baseline: ${baselineData.bhLux.toFixed(1)} lux)</td>
-            </tr>
-            <tr style="background: #f8f9fa;">
-                <td style="padding: 10px;"><strong>Average LDR:</strong></td>
-                <td style="padding: 10px;">${currentAvgLDR} (Baseline: ${baselineData.avgLDR})</td>
-            </tr>
-            <tr style="background: white;">
-                <td style="padding: 10px;"><strong>Expected Current (BH1750):</strong></td>
-                <td style="padding: 10px;">${expectedFromBH.toFixed(2)} mA</td>
-            </tr>
-            <tr style="background: #f8f9fa;">
-                <td style="padding: 10px;"><strong>Expected Current (LDR):</strong></td>
-                <td style="padding: 10px;">${expectedFromLDR.toFixed(2)} mA</td>
-            </tr>
-            <tr style="background: white;">
-                <td style="padding: 10px;"><strong>Expected Current (Average):</strong></td>
-                <td style="padding: 10px;">${expectedCurrent.toFixed(2)} mA</td>
-            </tr>
-            <tr style="background: #f8f9fa;">
-                <td style="padding: 10px;"><strong>Actual Current:</strong></td>
-                <td style="padding: 10px;">${currentCurrent.toFixed(2)} mA</td>
-            </tr>
-            <tr style="background: white;">
-                <td style="padding: 10px;"><strong>Performance:</strong></td>
-                <td style="padding: 10px; font-size: 1.2em; font-weight: bold;">${performance.toFixed(1)}%</td>
-            </tr>
-        </table>
-        <br>
-    `;
+    let statusHTML = `<strong>Performance: ${performance.toFixed(1)}%</strong><br><br>`;
 
-    // Add recommendation
     if (performance < 70) {
-        statusHTML += '<div style="background: #fee2e2; padding: 15px; border-radius: 8px; border-left: 4px solid #ef4444;">';
-        statusHTML += '<span style="color: #991b1b; font-weight: bold; font-size: 1.1em;">🧼 CLEANING REQUIRED</span><br>';
-        statusHTML += '<span style="color: #991b1b;">Performance below 70% - Panel cleaning strongly recommended!</span>';
-        statusHTML += '</div>';
+        statusHTML += '<div style="background: #fee2e2; padding: 15px; border-radius: 8px;"><strong>🧼 CLEANING REQUIRED</strong></div>';
     } else if (performance < 85) {
-        statusHTML += '<div style="background: #fef3c7; padding: 15px; border-radius: 8px; border-left: 4px solid #f59e0b;">';
-        statusHTML += '<span style="color: #92400e; font-weight: bold; font-size: 1.1em;">⚠️ MONITOR CLOSELY</span><br>';
-        statusHTML += '<span style="color: #92400e;">Performance slightly degraded - Consider cleaning soon.</span>';
-        statusHTML += '</div>';
+        statusHTML += '<div style="background: #fef3c7; padding: 15px; border-radius: 8px;"><strong>⚠️ MONITOR CLOSELY</strong></div>';
     } else {
-        statusHTML += '<div style="background: #d1fae5; padding: 15px; border-radius: 8px; border-left: 4px solid #10b981;">';
-        statusHTML += '<span style="color: #065f46; font-weight: bold; font-size: 1.1em;">✅ PANEL CLEAN</span><br>';
-        statusHTML += '<span style="color: #065f46;">Performance optimal - No cleaning needed at this time.</span>';
-        statusHTML += '</div>';
+        statusHTML += '<div style="background: #d1fae5; padding: 15px; border-radius: 8px;"><strong>✅ PANEL CLEAN</strong></div>';
     }
 
     detailsDiv.innerHTML = statusHTML;
 }
 
-// ============ LOAD BASELINE FROM LOCALSTORAGE ============
 function loadBaseline() {
     const saved = localStorage.getItem('solarTrackerBaseline');
     if (saved) {
         baselineData = JSON.parse(saved);
-        console.log('Baseline loaded from localStorage:', baselineData);
+        console.log('Baseline loaded:', baselineData);
     }
 }
 
-// ============ INITIALIZE ON PAGE LOAD ============
+// ============ INITIALIZE ============
 window.onload = function() {
     console.log('Solar Tracker Dashboard initialized');
-
-    // Load saved baseline
     loadBaseline();
-
-    // Initial data fetch
     fetchLiveData();
-
-    // Set up periodic updates
     setInterval(fetchLiveData, UPDATE_INTERVAL);
-
-    // Add GitHub link update helper
-    const githubLink = document.getElementById('githubLink');
-    if (githubLink) {
-        githubLink.addEventListener('click', function(e) {
-            if (this.href === '#' || this.href.endsWith('#')) {
-                e.preventDefault();
-                const repoURL = prompt('Enter your GitHub repository URL:', 'https://github.com/yourusername/solar-tracker');
-                if (repoURL) {
-                    this.href = repoURL;
-                    this.textContent = repoURL;
-                }
-            }
-        });
-    }
 };
-
-// ============ ERROR HANDLING ============
-window.onerror = function(msg, url, lineNo, columnNo, error) {
-    console.error('Error: ', msg, '\nURL: ', url, '\nLine: ', lineNo, '\nColumn: ', columnNo, '\nError object: ', error);
-    return false;
-};
-
