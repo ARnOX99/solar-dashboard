@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Solar Tracker Dashboard</title>
+    <title>Solar Tracker Dashboard - IoT Monitoring System</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -14,10 +14,10 @@
             <div class="header-content">
                 <div class="header-text">
                     <h1>☀️ Solar Tracker Dashboard</h1>
-                    <p>Real-time monitoring and control system</p>
+                    <p>Real-time IoT monitoring and control system</p>
                 </div>
                 <div class="header-image">
-                    <img src="images/solar-model.jpg" alt="Solar Tracker Model" id="solarModelImg">
+                    <img src="images/solar-model.jpg" alt="Solar Tracker Model" id="solarModelImg" onerror="this.style.display='none'">
                 </div>
             </div>
         </div>
@@ -127,7 +127,7 @@
 
             <!-- Past Readings Tab -->
             <div id="history" class="tab-content">
-                <h2 style="margin-bottom: 20px;">📈 Historical Trends (ThingSpeak)</h2>
+                <h2 style="margin-bottom: 20px;">📈 Historical Trends (Last 100 Readings)</h2>
 
                 <!-- Compact 2-column grid for individual graphs -->
                 <div class="charts-grid">
@@ -193,9 +193,9 @@
                 </div>
             </div>
 
-            <!-- NEW: Data Table Tab -->
+            <!-- Data Table Tab -->
             <div id="datatable" class="tab-content">
-                <h2 style="margin-bottom: 20px;">📋 Historical Data Table</h2>
+                <h2 style="margin-bottom: 20px;">📋 Historical Data Table & Export</h2>
 
                 <!-- Data Controls -->
                 <div class="data-controls">
@@ -208,13 +208,15 @@
                             <option value="1000">Last 1000 readings (~5.5 hours)</option>
                             <option value="3000">Last 3000 readings (~16.7 hours)</option>
                             <option value="8000" selected>Last 8000 readings (~44 hours)</option>
+                            <option value="12960">Last 12960 readings (72 hours - 3 days) ⭐</option>
                         </select>
                     </div>
 
                     <div class="control-group">
                         <button class="btn btn-primary" onclick="loadDataTable()">🔄 Refresh Data</button>
-                        <button class="btn btn-success" onclick="exportToCSV()">📥 Download CSV</button>
-                        <button class="btn btn-warning" onclick="exportToExcel()">📊 Download Excel</button>
+                        <button class="btn btn-success" onclick="exportToCSV()"> Download CSV</button>
+                        <button class="btn btn-warning" onclick="exportToExcel()"> Download Excel</button>
+                        <button class="btn btn-info" onclick="checkDataQuality()"> Check Quality</button>
                     </div>
                 </div>
 
@@ -238,10 +240,20 @@
                     </div>
                 </div>
 
+                <!-- Data Quality Indicator -->
+                <div id="dataQuality" style="text-align: center; background: #dbeafe; padding: 10px; border-radius: 8px; margin-bottom: 15px; display: none;">
+                    <strong>Data Quality:</strong> Calculating...
+                </div>
+
                 <!-- Search and Filter -->
                 <div class="table-controls">
                     <input type="text" id="searchBox" placeholder="🔍 Search data..." onkeyup="filterTable()">
                     <span id="tableInfo">Showing <strong id="rowCount">0</strong> readings</span>
+                </div>
+
+                <!-- Warning for Null Data -->
+                <div id="dataWarning" style="display: none; background: #fef3c7; padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #f59e0b;">
+                    ⚠️ Some readings contain missing data (shown with 0 values). This is normal when sensors are initializing or during transmission errors.
                 </div>
 
                 <!-- Data Table -->
@@ -266,7 +278,7 @@
                             <tr>
                                 <td colspan="11" style="text-align: center; padding: 40px;">
                                     <div class="spinner"></div>
-                                    <p>Loading data from ThingSpeak...</p>
+                                    <p>Click "Refresh Data" to load readings from ThingSpeak</p>
                                 </td>
                             </tr>
                         </tbody>
@@ -283,7 +295,7 @@
 
             <!-- Alerts Tab -->
             <div id="alerts" class="tab-content">
-                <h2 style="margin-bottom: 20px;">🔔 System Alerts</h2>
+                <h2 style="margin-bottom: 20px;">🔔 System Alerts & Notifications</h2>
 
                 <div id="alertsContainer">
                     <div class="alert info">
@@ -366,7 +378,7 @@
                 <div class="info-section">
                     <h3>Block Diagram</h3>
                     <div class="diagram-container">
-                        <img src="images/block-diagram.png" alt="System Block Diagram" class="diagram-img">
+                        <img src="images/block-diagram.png" alt="System Block Diagram" class="diagram-img" onerror="this.style.display='none'">
                     </div>
                 </div>
 
@@ -374,7 +386,7 @@
                 <div class="info-section">
                     <h3>Circuit Diagram</h3>
                     <div class="diagram-container">
-                        <img src="images/circuit-diagram.png" alt="Circuit Diagram" class="diagram-img">
+                        <img src="images/circuit-diagram.png" alt="Circuit Diagram" class="diagram-img" onerror="this.style.display='none'">
                     </div>
                 </div>
 
@@ -407,6 +419,7 @@
                         <li> Cross-platform web dashboard (mobile & desktop)</li>
                         <li> Real-time alerts and notifications</li>
                         <li> Exportable data tables (CSV/Excel)</li>
+                        <li> Up to 72 hours of historical data</li>
                     </ul>
                 </div>
 
@@ -427,7 +440,7 @@
                 <div class="info-section">
                     <h3>Project Team</h3>
                     <p>Developed as an advanced IoT solar energy harvesting and monitoring system.</p>
-                    <p><strong>GitHub Repository:</strong> <a href="#" target="_blank" id="githubLink">Add your repo link</a></p>
+                    <p><strong>GitHub Repository:</strong> <a href="https://github.com/arnox99/solar-dashboard" target="_blank">github.com/arnox99/solar-dashboard</a></p>
                 </div>
             </div>
         </div>
@@ -436,4 +449,3 @@
     <script src="script.js"></script>
 </body>
 </html>
-
