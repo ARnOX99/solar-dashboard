@@ -25,7 +25,8 @@
         <!-- Navigation Tabs -->
         <div class="tabs">
             <button class="tab active" onclick="switchTab('live')">📊 Live Readings</button>
-            <button class="tab" onclick="switchTab('history')">📈 Past Readings</button>
+            <button class="tab" onclick="switchTab('history')">📈 Historical Data</button>
+            <button class="tab" onclick="switchTab('datatable')">📋 Data Table</button>
             <button class="tab" onclick="switchTab('alerts')">🔔 Alerts</button>
             <button class="tab" onclick="switchTab('control')">🎛️ Controls</button>
             <button class="tab" onclick="switchTab('about')">ℹ️ About</button>
@@ -126,7 +127,7 @@
 
             <!-- Historical Data Tab -->
             <div id="history" class="tab-content">
-                <h2 style="margin-bottom: 20px;">📈 Past Trends </h2>
+                <h2 style="margin-bottom: 20px;">📈 Historical Trends (ThingSpeak)</h2>
 
                 <!-- Compact 2-column grid for individual graphs -->
                 <div class="charts-grid">
@@ -189,6 +190,94 @@
                         <div class="chart-title-compact">📡 Average LDR</div>
                         <canvas id="chartAvgLDR"></canvas>
                     </div>
+                </div>
+            </div>
+
+            <!-- NEW: Data Table Tab -->
+            <div id="datatable" class="tab-content">
+                <h2 style="margin-bottom: 20px;">📋 Historical Data Table</h2>
+
+                <!-- Data Controls -->
+                <div class="data-controls">
+                    <div class="control-group">
+                        <label for="dataRange">📅 Data Range:</label>
+                        <select id="dataRange" onchange="loadDataTable()">
+                            <option value="100">Last 100 readings (~33 mins)</option>
+                            <option value="300">Last 300 readings (~1.5 hours)</option>
+                            <option value="500">Last 500 readings (~2.8 hours)</option>
+                            <option value="1000">Last 1000 readings (~5.5 hours)</option>
+                            <option value="3000">Last 3000 readings (~16.7 hours)</option>
+                            <option value="8000" selected>Last 8000 readings (~44 hours)</option>
+                        </select>
+                    </div>
+
+                    <div class="control-group">
+                        <button class="btn btn-primary" onclick="loadDataTable()">🔄 Refresh Data</button>
+                        <button class="btn btn-success" onclick="exportToCSV()">📥 Download CSV</button>
+                        <button class="btn btn-warning" onclick="exportToExcel()">📊 Download Excel</button>
+                    </div>
+                </div>
+
+                <!-- Statistics Summary -->
+                <div class="stats-summary">
+                    <div class="stat-box">
+                        <div class="stat-label">Total Readings</div>
+                        <div class="stat-value" id="totalReadings">0</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Avg Power (mW)</div>
+                        <div class="stat-value" id="avgPower">0.00</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Total Energy (Wh)</div>
+                        <div class="stat-value" id="totalEnergy">0.00</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Peak Power (mW)</div>
+                        <div class="stat-value" id="peakPower">0.00</div>
+                    </div>
+                </div>
+
+                <!-- Search and Filter -->
+                <div class="table-controls">
+                    <input type="text" id="searchBox" placeholder="🔍 Search data..." onkeyup="filterTable()">
+                    <span id="tableInfo">Showing <strong id="rowCount">0</strong> readings</span>
+                </div>
+
+                <!-- Data Table -->
+                <div class="table-container">
+                    <table id="dataTable" class="data-table">
+                        <thead>
+                            <tr>
+                                <th onclick="sortTable(0)">#</th>
+                                <th onclick="sortTable(1)">Timestamp ⇅</th>
+                                <th onclick="sortTable(2)">Light (lux) ⇅</th>
+                                <th onclick="sortTable(3)">H Error ⇅</th>
+                                <th onclick="sortTable(4)">V Error ⇅</th>
+                                <th onclick="sortTable(5)">Servo X° ⇅</th>
+                                <th onclick="sortTable(6)">Servo Y° ⇅</th>
+                                <th onclick="sortTable(7)">Voltage (V) ⇅</th>
+                                <th onclick="sortTable(8)">Current (mA) ⇅</th>
+                                <th onclick="sortTable(9)">Power (mW) ⇅</th>
+                                <th onclick="sortTable(10)">Batt (V) ⇅</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dataTableBody">
+                            <tr>
+                                <td colspan="11" style="text-align: center; padding: 40px;">
+                                    <div class="spinner"></div>
+                                    <p>Loading data from ThingSpeak...</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div class="pagination" id="pagination">
+                    <button onclick="changePage(-1)">← Previous</button>
+                    <span id="pageInfo">Page 1 of 1</span>
+                    <button onclick="changePage(1)">Next →</button>
                 </div>
             </div>
 
@@ -309,14 +398,15 @@
                 <div class="info-section">
                     <h3>Key Features</h3>
                     <ul>
-                        <li> Real-time dual-axis sun tracking</li>
-                        <li> Cloud-based monitoring via ThingSpeak</li>
-                        <li> Smart cleaning alerts using dual-sensor validation</li>
-                        <li> Automatic power saving during night/cloudy periods</li>
-                        <li> Remote battery management</li>
-                        <li> Comprehensive data logging and visualization</li>
-                        <li> Cross-platform web dashboard (mobile & desktop)</li>
-                        <li> Real-time alerts and notifications</li>
+                        <li>✅ Real-time dual-axis sun tracking</li>
+                        <li>✅ Cloud-based monitoring via ThingSpeak</li>
+                        <li>✅ Smart cleaning alerts using dual-sensor validation</li>
+                        <li>✅ Automatic power saving during night/cloudy periods</li>
+                        <li>✅ Remote battery management</li>
+                        <li>✅ Comprehensive data logging and visualization</li>
+                        <li>✅ Cross-platform web dashboard (mobile & desktop)</li>
+                        <li>✅ Real-time alerts and notifications</li>
+                        <li>✅ Exportable data tables (CSV/Excel)</li>
                     </ul>
                 </div>
 
@@ -335,27 +425,6 @@
                 </div>
 
                 <div class="info-section">
-                    <h3>Power Management</h3>
-                    <p><strong>Intelligent Energy Conservation:</strong></p>
-                    <ul>
-                        <li>Dual battery system with automatic relay switching</li>
-                        <li>Solar panel charging via TP4056 module</li>
-                        <li>Buck converter for stable servo power supply</li>
-                        <li>10-minute threshold before entering power save mode</li>
-                        <li>Automatic wake-up when sunlight returns</li>
-                    </ul>
-                </div>
-
-                <div class="info-section">
-                    <h3>Technology Stack</h3>
-                    <p><strong>Hardware:</strong> Arduino Uno, ESP8266, I2C Sensors, PWM Servos</p>
-                    <p><strong>Backend:</strong> ThingSpeak IoT Platform, REST API</p>
-                    <p><strong>Frontend:</strong> HTML5, CSS3, JavaScript (Vanilla)</p>
-                    <p><strong>Visualization:</strong> Chart.js for real-time graphs</p>
-                    <p><strong>Communication:</strong> UART (Arduino-ESP), WiFi (ESP-Cloud)</p>
-                </div>
-
-                <div class="info-section">
                     <h3>Project Team</h3>
                     <p>Developed as an advanced IoT solar energy harvesting and monitoring system.</p>
                     <p><strong>GitHub Repository:</strong> <a href="#" target="_blank" id="githubLink">Add your repo link</a></p>
@@ -367,6 +436,3 @@
     <script src="script.js"></script>
 </body>
 </html>
-
-
-
