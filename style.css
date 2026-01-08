@@ -10,6 +10,7 @@
     --success: #10b981;
     --warning: #f59e0b;
     --danger: #ef4444;
+    --info: #3b82f6;
     --dark: #1e293b;
     --light: #f1f5f9;
     --border: #e2e8f0;
@@ -76,6 +77,16 @@ body {
     display: flex;
     background: var(--dark);
     overflow-x: auto;
+    scrollbar-width: thin;
+}
+
+.tabs::-webkit-scrollbar {
+    height: 4px;
+}
+
+.tabs::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.3);
+    border-radius: 2px;
 }
 
 .tab {
@@ -87,6 +98,7 @@ body {
     font-size: 1em;
     transition: all 0.3s;
     white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .tab:hover {
@@ -132,11 +144,12 @@ body {
     padding: 20px;
     border-radius: 15px;
     box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    transition: transform 0.3s;
+    transition: transform 0.3s, box-shadow 0.3s;
 }
 
 .reading-card:hover {
     transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2);
 }
 
 .reading-label {
@@ -300,6 +313,11 @@ body {
     color: white;
 }
 
+.btn-info {
+    background: var(--info);
+    color: white;
+}
+
 .btn:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0,0,0,0.2);
@@ -404,6 +422,7 @@ body {
     display: flex;
     align-items: center;
     gap: 10px;
+    flex-wrap: wrap;
 }
 
 .control-group label {
@@ -418,6 +437,12 @@ body {
     font-size: 0.95em;
     background: white;
     cursor: pointer;
+    transition: border-color 0.3s;
+}
+
+.control-group select:focus {
+    outline: none;
+    border-color: var(--primary);
 }
 
 /* Statistics Summary */
@@ -435,6 +460,11 @@ body {
     border-radius: 12px;
     text-align: center;
     box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    transition: transform 0.3s;
+}
+
+.stat-box:hover {
+    transform: translateY(-3px);
 }
 
 .stat-label {
@@ -455,6 +485,7 @@ body {
     align-items: center;
     margin-bottom: 15px;
     gap: 15px;
+    flex-wrap: wrap;
 }
 
 #searchBox {
@@ -464,6 +495,7 @@ body {
     border: 2px solid var(--border);
     border-radius: 8px;
     font-size: 1em;
+    transition: border-color 0.3s;
 }
 
 #searchBox:focus {
@@ -508,6 +540,7 @@ body {
     cursor: pointer;
     user-select: none;
     white-space: nowrap;
+    transition: background 0.3s;
 }
 
 .data-table th:hover {
@@ -541,6 +574,16 @@ body {
     color: var(--primary);
 }
 
+/* Null warning rows */
+.null-warning {
+    background-color: #fef3c7 !important;
+    border-left: 3px solid var(--warning) !important;
+}
+
+.null-warning:hover {
+    background-color: #fde68a !important;
+}
+
 /* Pagination */
 .pagination {
     display: flex;
@@ -564,6 +607,7 @@ body {
 .pagination button:hover:not(:disabled) {
     background: var(--gradient-1);
     transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 }
 
 .pagination button:disabled {
@@ -660,6 +704,10 @@ body {
 
     .control-group select {
         width: 100%;
+    }
+
+    #searchBox {
+        max-width: 100%;
     }
 }
 
