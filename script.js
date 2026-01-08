@@ -340,49 +340,106 @@ function sortTable(columnIndex) {
 
 // ============ EXPORT TO CSV ============
 function exportToCSV() {
+    if (!historicalData || historicalData.length === 0) {
+        alert('⚠️ No data available to export. Please load data first.');
+        return;
+    }
+
+    // CSV Header
     let csv = 'Timestamp,Light Intensity (lux),H Error,V Error,Servo X (deg),Servo Y (deg),Voltage (V),Current (mA),Power (mW),Battery (V)\n';
 
+    // Process each row with null/undefined handling
     historicalData.forEach(row => {
-        const timestamp = new Date(row.created_at).toISOString();
+        const timestamp = row.created_at ? new Date(row.created_at).toLocaleString() : 'N/A';
+
+        // Parse all fields with fallback to 0 if null/undefined/empty
+        const field1 = parseFloat(row.field1 || 0).toFixed(1);  // Light Intensity
+        const field2 = parseInt(row.field2 || 0);                // H Error
+        const field3 = parseInt(row.field3 || 0);                // V Error
+        const field4 = parseInt(row.field4 || 90);               // Servo X (default 90)
+        const field5 = parseInt(row.field5 || 90);               // Servo Y (default 90)
+        const field6 = parseFloat(row.field6 || 0).toFixed(2);  // Voltage
+        const field7 = parseFloat(row.field7 || 0).toFixed(2);  // Current
+        const field8 = parseFloat(row.field8 || 0).toFixed(2);  // Battery
+
+        // Calculate power with proper null handling
         const voltage = parseFloat(row.field6 || 0);
         const current = parseFloat(row.field7 || 0);
         const power = (voltage * current).toFixed(2);
 
-        csv += `${timestamp},${row.field1},${row.field2},${row.field3},${row.field4},${row.field5},${row.field6},${row.field7},${power},${row.field8}\n`;
+        // Build CSV row - use quotes for timestamp to handle commas
+        csv += `"${timestamp}",${field1},${field2},${field3},${field4},${field5},${field6},${field7},${power},${field8}\n`;
     });
 
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `solar_tracker_data_${new Date().toISOString().split('T')[0]}.csv`;
-    a.click();
-    window.URL.revokeObjectURL(url);
-}
-
-// ============ EXPORT TO EXCEL-COMPATIBLE CSV ============
-function exportToExcel() {
-    // Excel-friendly CSV with UTF-8 BOM
-    let csv = '\ufeffTimestamp,Light Intensity (lux),H Error,V Error,Servo X (deg),Servo Y (deg),Voltage (V),Current (mA),Power (mW),Battery (V)\n';
-
-    historicalData.forEach(row => {
-        const timestamp = new Date(row.created_at).toLocaleString();
-        const voltage = parseFloat(row.field6 || 0);
-        const current = parseFloat(row.field7 || 0);
-        const power = (voltage * current).toFixed(2);
-
-        csv += `"${timestamp}",${row.field1},${row.field2},${row.field3},${row.field4},${row.field5},${row.field6},${row.field7},${power},${row.field8}\n`;
-    });
-
+    // Create and download file
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `solar_tracker_data_excel_${new Date().toISOString().split('T')[0]}.csv`;
+    const dateStr = new Date().toISOString().split('T')[0];
+    a.download = `solar_tracker_data_${dateStr}.csv`;
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
 
-    alert('✅ Data exported! Open in Excel for charts and analysis.');
+    console.log(`✅ CSV exported: ${historicalData.length} rows`);
+    alert(`✅ CSV file downloaded successfully!\n\nRows: ${historicalData.length}\nFile: solar_tracker_data_${dateStr}.csv`);
+}
+
+
+// ============ EXPORT TO EXCEL-COMPATIBLE CSV ============
+function exportToExcel() {
+    if (!historicalData || historicalData.length === 0) {
+        alert('⚠️ No data available to export. Please load data first.');
+        return;
+    }
+
+    // Excel-friendly CSV with UTF-8 BOM for proper encoding
+    let csv = '\ufeffTimestamp,Light Intensity (lux),H Error,V Error,Servo X (deg),Servo Y (deg),Voltage (V),Current (mA),Power (mW),Battery (V)\n';
+
+    // Process each row with comprehensive null handling
+    historicalData.forEach(row => {
+        const timestamp = row.created_at ? new Date(row.created_at).toLocaleString() : 'N/A';
+
+        // Parse all fields with fallback to 0 if null/undefined/empty
+        // Use Number() for safer conversion
+        const field1 = Number(row.field1) || 0;  // Light Intensity
+        const field2 = Number(row.field2) || 0;  // H Error
+        const field3 = Number(row.field3) || 0;  // V Error
+        const field4 = Number(row.field4) || 90; // Servo X
+        const field5 = Number(row.field5) || 90; // Servo Y
+        const field6 = Number(row.field6) || 0;  // Voltage
+        const field7 = Number(row.field7) || 0;  // Current
+        const field8 = Number(row.field8) || 0;  // Battery
+
+        // Calculate power
+        const power = (field6 * field7).toFixed(2);
+
+        // Format with proper decimal places
+        const lightFormatted = field1.toFixed(1);
+        const voltageFormatted = field6.toFixed(2);
+        const currentFormatted = field7.toFixed(2);
+        const batteryFormatted = field8.toFixed(2);
+
+        // Build CSV row with quotes for timestamp
+        csv += `"${timestamp}",${lightFormatted},${field2},${field3},${field4},${field5},${voltageFormatted},${currentFormatted},${power},${batteryFormatted}\n`;
+    });
+
+    // Create blob with proper MIME type and BOM
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    const dateStr = new Date().toISOString().split('T')[0];
+    a.download = `solar_tracker_data_excel_${dateStr}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+
+    console.log(`✅ Excel CSV exported: ${historicalData.length} rows`);
+    alert(`✅ Excel-compatible CSV downloaded!\n\nRows: ${historicalData.length}\nFile: solar_tracker_data_excel_${dateStr}.csv\n\n💡 Tip: Open directly in Excel or Google Sheets`);
 }
 
 // ============ CHECK ALERTS ============
@@ -717,3 +774,4 @@ window.onload = function() {
     fetchLiveData();
     setInterval(fetchLiveData, UPDATE_INTERVAL);
 };
+
