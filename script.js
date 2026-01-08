@@ -1,6 +1,6 @@
 // ============ CONFIGURATION ============
-const THINGSPEAK_CHANNEL_ID = '3209440';  // CHANGE THIS
-const THINGSPEAK_READ_KEY = 'RAP1FJI6NKHKOEI2';  // CHANGE THIS
+const CHANNEL_ID = '3209440';  // CHANGE THIS
+const READ_API_KEY = 'RAP1FJI6NKHKOEI2';  // CHANGE THIS
 const UPDATE_INTERVAL = 20000; // 20 seconds
 
 // Global variables
@@ -927,6 +927,7 @@ window.addEventListener('DOMContentLoaded', () => {
         console.log('Loaded baseline:', cleanBaseline);
     }
 });
+
 
 
 
